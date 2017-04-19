@@ -4,13 +4,20 @@
 ActiveRecord::Schema.define(version: 0) do
   create_table :forums do |t|
     t.string :name
+    t.references :parent, foreign_key: { to_table: :forums, on_delete: :cascade }
   end
 
   create_table :users do |t|
-    t.string     :name
-    t.string     :title
+    t.string     :login
+    t.string     :encrypted_password
     t.references :forum, foreign_key: true
     t.timestamps null: false
+  end
+
+  create_table :profiles do |t|
+    t.references :user, foreign_key: { on_delete: :cascade }
+    t.string     :name
+    t.string     :title
   end
 
   create_table :questions do |t|
@@ -19,6 +26,7 @@ ActiveRecord::Schema.define(version: 0) do
     t.integer    :rating, default: 0, null: false
     t.text       :text
     t.references :author, foreign_key: { to_table: :users, on_delete: :nullify }
+    t.timestamps null: false
   end
 
   create_table :answers do |t|
@@ -26,6 +34,11 @@ ActiveRecord::Schema.define(version: 0) do
     t.boolean    :best
     t.text       :text
     t.references :author, foreign_key: { to_table: :users, on_delete: :nullify }
+    t.timestamps null: false
+  end
+
+  create_table :tracking_pixels do |t|
+    t.references :forum, foreign_key: { on_delete: :cascade }
   end
 
   create_table :votes do |t|

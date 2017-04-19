@@ -22,7 +22,40 @@ Or install it yourself as:
 
 ## Usage
 
-TODO: Write usage instructions here
+
+### Configuration
+
+```ruby
+EvilSeed.configure do |config|
+  # First, you should specify +root models+ and constraints to limit the dumping quantity:
+  # This is like Forum.where(featured: true).all
+  config.root('Forum', featured: true) do |r|
+    # It's possible to remove some associations from dumping with pattern of association path to exclude
+    #
+    # Association path is a dot-delimited string of association chain starting from model itself:
+    # example: "forum.users.questions"
+    r.exclude(/\btracking_pixels\b/, 'forum.popular_questions')
+
+    # It's possible to limit number of associated records to be included into dump for all associations
+    r.limit_associations_size(100)
+
+    # Or for certain association only
+    r.limit_associations_size(10, 'forum.questions')
+  end
+
+  config.root("Role") do |r|
+    # Exclude everything
+    r.exclude(/.*/)
+  end
+```
+
+### Making dump
+
+Just call `dump` method!
+
+```ruby
+EvilSeed.dump('path/to/new_dump.sql')
+```
 
 ## Development
 

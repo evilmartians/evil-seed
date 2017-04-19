@@ -33,3 +33,4 @@ ActiveRecord::Base.establish_connection(config)
 
 require "#{database_folder}/schema"
 require "#{database_folder}/models"
+require "#{database_folder}/seeds"
