@@ -47,6 +47,18 @@ EvilSeed.configure do |config|
     # Exclude everything
     r.exclude(/.*/)
   end
+
+  # Transformation
+  config.customize("User") do |u|
+    # Reset password for all users to the same for ease of debugging on developer's machine
+    u["encrypted_password"] = encrypt("qwerty")
+  end
+
+  # Anonymization is a handy DSL for transformation allowing you to transform model attributes in declarative fashion
+  config.anonymize("User")
+    name  { Faker::Name.name }
+    email { Faker::Internet.email }
+  end
 ```
 
 ### Making dump

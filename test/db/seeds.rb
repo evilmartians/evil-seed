@@ -14,12 +14,12 @@ roles = Role.create!(
 
 User.create!(
   [
-    { login: 'johndoe', forum: forums.first, roles: [roles.second] },
-    { login: 'janedoe', forum: forums.last,  roles: [roles.first]  },
-    { login: 'alice',   forum: forums.first, roles: [roles.second] },
-    { login: 'bob',     forum: forums.first, roles: [roles.third]  },
-    { login: 'charlie', forum: forums.first, roles: [roles.last]   },
-    { login: 'eva',     forum: forums.first, roles: [roles.third]  },
+    { login: 'johndoe', email: 'johndoe@example.com', password: 'realhash', forum: forums[0], roles: [roles.second] },
+    { login: 'janedoe', email: 'janedoe@example.net', password: 'realhash', forum: forums[1], roles: [roles.first]  },
+    { login: 'alice',   email: 'alice@yahoo.com',     password: 'realhash', forum: forums[0], roles: [roles.second] },
+    { login: 'bob',     email: 'robert1998@mail.ru',  password: 'realhash', forum: forums[0], roles: [roles.third]  },
+    { login: 'charlie', email: 'charlie@gmail.com',   password: 'realhash', forum: forums[0], roles: [roles.last]   },
+    { login: 'eva',     email: 'eva@evil.com',        password: 'realhash', forum: forums[0], roles: [roles.third]  },
   ],
 )
 

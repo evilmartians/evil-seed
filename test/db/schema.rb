@@ -9,7 +9,8 @@ ActiveRecord::Schema.define(version: 0) do
 
   create_table :users do |t|
     t.string     :login
-    t.string     :encrypted_password
+    t.string     :email
+    t.string     :password
     t.references :forum, foreign_key: true
     t.timestamps null: false
   end

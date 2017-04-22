@@ -11,6 +11,12 @@ module EvilSeed
         root.exclude('forum.users')
         root.exclude(/parent\.users/)
       end
+      configuration.customize('User') do |attributes|
+        attributes['password'] = '12345678'
+      end
+      configuration.anonymize('User') do
+        email { 'user@example.com' }
+      end
       io = StringIO.new
       EvilSeed::Dumper.new(configuration, io).call
       result = io.string
@@ -28,6 +34,10 @@ module EvilSeed
       assert_match(/'Nobody'/, result)
       refute_match(/'Superadmin'/, result)
       refute_match(/'UFO'/, result)
+      assert_match(/'12345678'/, result)
+      refute_match(/'realhash'/, result)
+      assert_match(/'user@example.com'/, result)
+      refute_match(/'alice@yahoo.com'/, result)
       assert result.index(/'One'/) < result.index(/'Descendant forum'/)
     end
   end

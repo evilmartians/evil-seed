@@ -17,7 +17,7 @@ module EvilSeed
                 :belongs_to_reflections, :has_many_reflections, :foreign_keys, :loaded_ids, :to_load_map, :output,
                 :inverse_reflection, :table_names
 
-    delegate :loaded_map, :table_outputs, :total_limit, :association_limits, :root, to: :root_dumper
+    delegate :loaded_map, :table_outputs, :total_limit, :association_limits, :root, :configuration, to: :root_dumper
 
     def initialize(relation, root_dumper, association_path, **options)
       @relation               = relation
@@ -31,7 +31,6 @@ module EvilSeed
       @association_path       = association_path
       @inverse_reflection     = options[:inverse_of]
       @output                 = Tempfile.new(["evil_seed_#{model_class.table_name}_", '.sql'])
-      @configuration          = root_dumper.configuration
       @nullify_columns        = []
       @table_names            = {}
       @belongs_to_reflections = setup_belongs_to_reflections
@@ -97,7 +96,8 @@ module EvilSeed
       nullify_columns.each do |nullify_column|
         attributes[nullify_column] = nil
       end
-      output.write(insert_statement(attributes))
+
+      output.write(insert_statement(transform_and_anonymize(attributes)))
     end
 
     def loaded!(attributes)
@@ -105,6 +105,14 @@ module EvilSeed
       id = attributes[model_class.primary_key]
       return false if loaded_map[model_class.table_name].include?(id)
       loaded_map[model_class.table_name] << id
+    end
+
+    def transform_and_anonymize(attributes)
+      customizers = configuration.customizers[model_class.to_s]
+      return attributes unless customizers
+      attributes.tap do |attributes|
+        customizers.each { |customizer| customizer.call(attributes) }
+      end
     end
 
     def insert_statement(attributes)
