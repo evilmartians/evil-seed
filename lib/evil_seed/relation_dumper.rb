@@ -12,6 +12,7 @@ module EvilSeed
   #
   class RelationDumper
     MAX_IDENTIFIERS_IN_IN_STMT = 1_000
+    MAX_TUPLES_PER_INSERT_STMT = 1_000
 
     attr_reader :relation, :root_dumper, :model_class, :association_path, :search_key, :identifiers, :nullify_columns,
                 :belongs_to_reflections, :has_many_reflections, :foreign_keys, :loaded_ids, :to_load_map, :output,
@@ -36,6 +37,8 @@ module EvilSeed
       @belongs_to_reflections = setup_belongs_to_reflections
       @has_many_reflections   = setup_has_many_reflections
       @options                = options
+      @header_written         = false
+      @tuples_written         = 0
     end
 
     # Generate dump and write it into +io+
@@ -66,6 +69,8 @@ module EvilSeed
           limitable:        true,
         ).call
       end
+
+      output.write(";\n\n") if @header_written
 
       [belongs_to_dumps, output, has_many_dumps].flatten.compact
     end
@@ -100,7 +105,7 @@ module EvilSeed
         attributes[nullify_column] = nil
       end
 
-      output.write(insert_statement(transform_and_anonymize(attributes)))
+      write!(transform_and_anonymize(attributes))
     end
 
     def loaded!(attributes)
@@ -118,11 +123,19 @@ module EvilSeed
       end
     end
 
-    def insert_statement(attributes)
+    def insert_statement
       connection = model_class.connection
       table_name = connection.quote_table_name(model_class.table_name)
       columns    = model_class.attribute_names.map { |c| connection.quote_column_name(c) }.join(', ')
-      "INSERT INTO #{table_name} (#{columns}) VALUES (#{prepare(attributes).join(', ')});\n" # TODO: Do this with AR
+      "INSERT INTO #{table_name} (#{columns}) VALUES\n"
+    end
+
+    def write!(attributes)
+      output.write("-- #{association_path}\n") && @header_written = true unless @header_written
+      output.write(@tuples_written.zero? ? insert_statement : ",\n")
+      output.write("  (#{prepare(attributes).join(', ')})")
+      @tuples_written += 1
+      output.write(";\n") && @tuples_written = 0 if @tuples_written == MAX_TUPLES_PER_INSERT_STMT
     end
 
     def prepare(attributes)
