@@ -105,8 +105,7 @@ module EvilSeed
 
     def loaded!(attributes)
       return false unless check_limits!
-      return true if model_class.primary_key.nil?
-      id = attributes[model_class.primary_key]
+      id = model_class.primary_key && attributes[model_class.primary_key] || attributes
       return false if loaded_map[model_class.table_name].include?(id)
       loaded_map[model_class.table_name] << id
     end

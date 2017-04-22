@@ -10,6 +10,7 @@ module EvilSeed
         root.exclude(/parent\.children/)
         root.exclude('forum.users')
         root.exclude(/parent\.users/)
+        root.exclude(/role\..+/)
       end
       configuration.customize('User') do |attributes|
         attributes['password'] = '12345678'
