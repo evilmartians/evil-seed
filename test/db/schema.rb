@@ -31,7 +31,7 @@ ActiveRecord::Schema.define(version: 0) do
 
   create_table :answers do |t|
     t.references :question, foreign_key: { on_delete: :cascade }
-    t.boolean    :best
+    t.boolean    :best, default: false
     t.text       :text
     t.references :author, foreign_key: { to_table: :users, on_delete: :nullify }
     t.timestamps null: false
@@ -51,8 +51,9 @@ ActiveRecord::Schema.define(version: 0) do
     t.string :permissions, array: true
   end
 
-  create_table :user_roles do |t|
+  create_table :user_roles, id: false do |t|
     t.references :user, foreign_key: { on_delete: :cascade }
     t.references :role, foreign_key: { on_delete: :cascade }
+    t.index %i[user_id role_id], unique: true
   end
 end

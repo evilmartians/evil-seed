@@ -7,11 +7,12 @@ module EvilSeed
     def test_it_dumps_tree_structures_with_foreign_keys
       configuration = EvilSeed::Configuration.dup
       configuration.root('Forum', name: 'Descendant forum') do |root|
-        root.exclude(/parent.children/)
+        root.exclude(/parent\.children/)
+        root.exclude('forum.users')
+        root.exclude(/parent\.users/)
       end
-      dumper = EvilSeed::Dumper.new(configuration)
       io = StringIO.new
-      dumper.call(io)
+      EvilSeed::Dumper.new(configuration, io).call
       result = io.string
       File.write(File.join('tmp', "#{__method__}.sql"), result)
       assert io.closed?
@@ -20,6 +21,13 @@ module EvilSeed
       refute_match(/'Two'/, result)
       assert_match(/'johndoe'/, result)
       refute_match(/'janedoe'/, result)
+      assert_match(/'alice'/, result)
+      assert_match(/'bob'/, result)
+      refute_match(/'charlie'/, result)
+      assert_match(/'User'/, result)
+      assert_match(/'Nobody'/, result)
+      refute_match(/'Superadmin'/, result)
+      refute_match(/'UFO'/, result)
       assert result.index(/'One'/) < result.index(/'Descendant forum'/)
     end
   end

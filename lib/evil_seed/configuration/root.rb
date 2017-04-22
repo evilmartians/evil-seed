@@ -33,6 +33,10 @@ module EvilSeed
           @total_limit = limit
         end
       end
+
+      def excluded?(association_path)
+        exclusions.any? { |exclusion| exclusion.match(association_path) }
+      end
     end
   end
 end
