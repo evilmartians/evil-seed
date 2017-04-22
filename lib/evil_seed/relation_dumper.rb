@@ -15,9 +15,9 @@ module EvilSeed
 
     attr_reader :relation, :root_dumper, :model_class, :association_path, :search_key, :identifiers, :nullify_columns,
                 :belongs_to_reflections, :has_many_reflections, :foreign_keys, :loaded_ids, :to_load_map, :output,
-                :inverse_reflection, :table_names
+                :inverse_reflection, :table_names, :options
 
-    delegate :loaded_map, :table_outputs, :total_limit, :association_limits, :root, :configuration, to: :root_dumper
+    delegate :loaded_map, :table_outputs, :root, :configuration, :total_limit, to: :root_dumper
 
     def initialize(relation, root_dumper, association_path, **options)
       @relation               = relation
@@ -35,6 +35,7 @@ module EvilSeed
       @table_names            = {}
       @belongs_to_reflections = setup_belongs_to_reflections
       @has_many_reflections   = setup_has_many_reflections
+      @options                = options
     end
 
     # Generate dump and write it into +io+
@@ -50,10 +51,11 @@ module EvilSeed
           "#{association_path}.#{reflection.name}",
           search_key:       reflection.association_primary_key,
           identifiers:      to_load_map[reflection.name],
+          limitable:        false,
         ).call
       end
       has_many_dumps = has_many_reflections.map do |reflection|
-        next if loaded_ids.empty?
+        next if loaded_ids.empty? || total_limit.try(:zero?)
         RelationDumper.new(
           build_relation(reflection),
           root_dumper,
@@ -61,6 +63,7 @@ module EvilSeed
           search_key:       reflection.foreign_key,
           identifiers:      loaded_ids,
           inverse_of:       reflection.inverse_of.try(:name),
+          limitable:        true,
         ).call
       end
 
@@ -101,6 +104,7 @@ module EvilSeed
     end
 
     def loaded!(attributes)
+      return false unless check_limits!
       return true if model_class.primary_key.nil?
       id = attributes[model_class.primary_key]
       return false if loaded_map[model_class.table_name].include?(id)
@@ -126,6 +130,11 @@ module EvilSeed
       attributes.map do |key, value|
         model_class.connection.quote(model_class.attribute_types[key].serialize(value))
       end
+    end
+
+    def check_limits!
+      return true unless options[:limitable]
+      root_dumper.check_limits!(association_path)
     end
 
     def build_relation(reflection)

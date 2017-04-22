@@ -31,6 +31,7 @@ end
 
 class Question < ActiveRecord::Base
   belongs_to :author, class_name: 'User'
+  belongs_to :forum
 
   has_many :answers
   has_many :votes, as: :votable

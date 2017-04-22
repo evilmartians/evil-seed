@@ -38,7 +38,25 @@ module EvilSeed
       refute_match(/'realhash'/, result)
       assert_match(/'user@example.com'/, result)
       refute_match(/'alice@yahoo.com'/, result)
+      assert_match(/'fourth'/, result)
+      assert_match(/'fifth'/, result)
       assert result.index(/'One'/) < result.index(/'Descendant forum'/)
+    end
+
+    def test_limits_being_applied
+      configuration = EvilSeed::Configuration.dup
+      configuration.root('Forum', name: 'One') do |root|
+        root.exclude('forum.children')
+        root.exclude('forum.users')
+        root.exclude(/forum\.\w*question.answers/)
+        root.limit_associations_size(5, /forum\.\w*questions/)
+      end
+      io = StringIO.new
+      EvilSeed::Dumper.new(configuration, io).call
+      result = io.string
+      File.write(File.join('tmp', "#{__method__}.sql"), result)
+      assert_match(/'fourth'/, result)
+      refute_match(/'fifth'/, result)
     end
   end
 end

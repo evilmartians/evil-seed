@@ -44,3 +44,6 @@ answer = question.answers.create!(
 )
 
 answer.votes.create!(user: User.find_by!(login: 'eva'))
+
+question_attrs = %w[first second third fourth fifth].map { |name| { name: name, forum: forums.first } }
+Question.create!(question_attrs)
