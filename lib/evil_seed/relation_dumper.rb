@@ -3,7 +3,7 @@
 module EvilSeed
   # This class performs actual dump generation for single relation and all its not yet loaded dependencies
   #
-  #  - Fetches all tuples for root (for now it instantiates AR records, but in future will not!)
+  #  - Fetches all tuples for root (it does not instantiate AR records but it casts values to Ruby types)
   #  - Extracts foreign key values for all belongs_to associations
   #  - Dumps belongs_to associations(recursion!)
   #  - Dumps all tuples for root, writes them in file
@@ -81,19 +81,29 @@ module EvilSeed
       if identifiers.present?
         # Don't use AR::Base#find_each as we will get error on Oracle if we will have more than 1000 ids in IN statement
         identifiers.in_groups_of(MAX_IDENTIFIERS_IN_IN_STMT).each do |ids|
-          relation.where(search_key => ids.compact).each do |record|
-            dump_record!(record)
+          fetch_attributes(relation.where(search_key => ids.compact)).each do |attributes|
+            dump_attributes!(attributes)
           end
         end
       else
-        relation.find_each do |record|
-          dump_record!(record)
+        relation.in_batches do |relation|
+          fetch_attributes(relation).each do |attributes|
+            dump_attributes!(attributes)
+          end
         end
       end
     end
 
-    def dump_record!(record)
-      attributes = record.attributes
+    # Selects attributes as a hash with typecasted values for all rows from +relation+
+    # @param relation [ActiveRecord::Relation]
+    # @return [Array<Hash{String => String, Integer, Float, Boolean, nil}>]
+    def fetch_attributes(relation)
+      relation.pluck(*model_class.attribute_names).map do |row|
+        Hash[model_class.attribute_names.zip(row)]
+      end
+    end
+
+    def dump_attributes!(attributes)
       return unless loaded!(attributes)
       foreign_keys.each do |reflection_name, fk_column|
         foreign_key = attributes[fk_column]
@@ -190,6 +200,7 @@ module EvilSeed
     end
 
     # Handles ActiveRecord API differences between AR 4.2 and 5.0
+    # Casts a value from the ruby type to a type that the database knows how to understand.
     def serialize(type, value)
       if type.respond_to?(:serialize)
         type.serialize(value)
