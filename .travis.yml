@@ -1,10 +1,18 @@
+cache: bundler
 sudo: false
 language: ruby
 rvm:
-  - 2.4
-  - 2.3
-  - 2.2
+  - 2.4.1
+  - 2.3.4
+  - 2.2.7
 gemfile:
   - gemfiles/activerecord-5-0.gemfile
   - gemfiles/activerecord-4-2.gemfile
-before_install: gem install bundler -v 1.14.6
+env:
+  - DB=postgresql
+  - DB=sqlite
+  - DB=mysql
+before_install:
+  - gem install bundler -v 1.14.6
+  - bundle install
+  - appraisal install

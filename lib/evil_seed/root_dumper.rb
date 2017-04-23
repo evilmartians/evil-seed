@@ -42,7 +42,7 @@ module EvilSeed
 
     def check_association_limits!(association_path)
       return true if association_limits.none?
-      applied_limits = association_limits.select { |path, _limit| path.match?(association_path) }
+      applied_limits = association_limits.select { |path, _limit| path.match(association_path) }
       return false if applied_limits.any? { |_path, limit| limit.zero? }
       applied_limits.each do |path, _limit|
         association_limits[path] -= 1
