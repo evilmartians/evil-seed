@@ -140,7 +140,7 @@ module EvilSeed
 
     def prepare(attributes)
       attributes.map do |key, value|
-        model_class.connection.quote(model_class.attribute_types[key].serialize(value))
+        model_class.connection.quote(serialize(attribute_types[key], value))
       end
     end
 
@@ -177,6 +177,25 @@ module EvilSeed
         next false if reflection.is_a?(ActiveRecord::Reflection::ThroughReflection)
         %i[has_one has_many].include?(reflection.macro) && !root.excluded?("#{association_path}.#{reflection.name}")
       end.map(&:second)
+    end
+
+    # Handles ActiveRecord API differences between AR 4.2 and 5.0
+    def attribute_types
+      return @attribute_types if defined?(@attribute_types)
+      @attribute_types = if model_class.respond_to?(:attribute_types)
+                           model_class.attribute_types
+                         else
+                           model_class.column_types
+                         end
+    end
+
+    # Handles ActiveRecord API differences between AR 4.2 and 5.0
+    def serialize(type, value)
+      if type.respond_to?(:serialize)
+        type.serialize(value)
+      else
+        type.type_cast_for_database(value)
+      end
     end
   end
 end

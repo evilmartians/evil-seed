@@ -35,4 +35,5 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency 'pg',       '~> 0.20'
   spec.add_development_dependency 'rubocop'
   spec.add_development_dependency 'pry'
+  spec.add_development_dependency 'appraisal'
 end

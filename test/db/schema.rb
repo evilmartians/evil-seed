@@ -4,8 +4,9 @@
 ActiveRecord::Schema.define(version: 0) do
   create_table :forums do |t|
     t.string :name
-    t.references :parent, foreign_key: { to_table: :forums, on_delete: :cascade }
+    t.references :parent
   end
+  add_foreign_key :forums, :forums, column: :parent_id, on_delete: :cascade
 
   create_table :users do |t|
     t.string     :login
@@ -26,17 +27,19 @@ ActiveRecord::Schema.define(version: 0) do
     t.string     :name
     t.integer    :rating, default: 0, null: false
     t.text       :text
-    t.references :author, foreign_key: { to_table: :users, on_delete: :nullify }
+    t.references :author
     t.timestamps null: false
   end
+  add_foreign_key :questions, :users, column: :author_id, on_delete: :nullify
 
   create_table :answers do |t|
     t.references :question, foreign_key: { on_delete: :cascade }
     t.boolean    :best, default: false
     t.text       :text
-    t.references :author, foreign_key: { to_table: :users, on_delete: :nullify }
+    t.references :author
     t.timestamps null: false
   end
+  add_foreign_key :answers, :users, column: :author_id, on_delete: :nullify
 
   create_table :tracking_pixels do |t|
     t.references :forum, foreign_key: { on_delete: :cascade }
