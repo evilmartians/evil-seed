@@ -5,11 +5,14 @@ module EvilSeed
   #
   #  - Fetches all tuples for root (it does not instantiate AR records but it casts values to Ruby types)
   #  - Extracts foreign key values for all belongs_to associations
+  #  - Runs all transformation objects for every tuple
+  #  - Serializes transformed values back to basic types and writes it to dump
   #  - Dumps belongs_to associations(recursion!)
   #  - Dumps all tuples for root, writes them in file
   #  - Dumps all other associations (recursion!)
-  #  - Returns all results to caller
+  #  - Returns all results to caller in correct order
   #
+  # TODO: This class obviously breaks SRP principle and thus should be split!
   class RelationDumper
     MAX_IDENTIFIERS_IN_IN_STMT = 1_000
     MAX_TUPLES_PER_INSERT_STMT = 1_000
