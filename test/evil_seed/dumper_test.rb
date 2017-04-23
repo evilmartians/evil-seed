@@ -19,7 +19,7 @@ module EvilSeed
         email { 'user@example.com' }
       end
       io = StringIO.new
-      EvilSeed::Dumper.new(configuration, io).call
+      EvilSeed::Dumper.new(configuration).call(io)
       result = io.string
       File.write(File.join('tmp', "#{__method__}.sql"), result)
       assert io.closed?
@@ -53,7 +53,7 @@ module EvilSeed
         root.limit_associations_size(5, /forum\.\w*questions/)
       end
       io = StringIO.new
-      EvilSeed::Dumper.new(configuration, io).call
+      EvilSeed::Dumper.new(configuration).call(io)
       result = io.string
       File.write(File.join('tmp', "#{__method__}.sql"), result)
       assert_match(/'fourth'/, result)

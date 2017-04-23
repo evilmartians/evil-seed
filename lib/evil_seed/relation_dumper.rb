@@ -45,33 +45,8 @@ module EvilSeed
     # @return [Array<IO>] List of dump IOs for separate tables in order of dependencies (belongs_to are first)
     def call
       dump!
-
-      belongs_to_dumps = belongs_to_reflections.map do |reflection|
-        next if to_load_map[reflection.name].empty?
-        RelationDumper.new(
-          build_relation(reflection),
-          root_dumper,
-          "#{association_path}.#{reflection.name}",
-          search_key:       reflection.association_primary_key,
-          identifiers:      to_load_map[reflection.name],
-          limitable:        false,
-        ).call
-      end
-      has_many_dumps = has_many_reflections.map do |reflection|
-        next if loaded_ids.empty? || total_limit.try(:zero?)
-        RelationDumper.new(
-          build_relation(reflection),
-          root_dumper,
-          "#{association_path}.#{reflection.name}",
-          search_key:       reflection.foreign_key,
-          identifiers:      loaded_ids,
-          inverse_of:       reflection.inverse_of.try(:name),
-          limitable:        true,
-        ).call
-      end
-
-      output.write(";\n\n") if @header_written
-
+      belongs_to_dumps = dump_belongs_to_associations!
+      has_many_dumps   = dump_has_many_associations!
       [belongs_to_dumps, output, has_many_dumps].flatten.compact
     end
 
@@ -91,6 +66,36 @@ module EvilSeed
             dump_attributes!(attributes)
           end
         end
+      end
+      finalize!
+    end
+
+    def dump_belongs_to_associations!
+      belongs_to_reflections.map do |reflection|
+        next if to_load_map[reflection.name].empty?
+        RelationDumper.new(
+          build_relation(reflection),
+          root_dumper,
+          "#{association_path}.#{reflection.name}",
+          search_key:       reflection.association_primary_key,
+          identifiers:      to_load_map[reflection.name],
+          limitable:        false,
+        ).call
+      end
+    end
+
+    def dump_has_many_associations!
+      has_many_reflections.map do |reflection|
+        next if loaded_ids.empty? || total_limit.try(:zero?)
+        RelationDumper.new(
+          build_relation(reflection),
+          root_dumper,
+          "#{association_path}.#{reflection.name}",
+          search_key:       reflection.foreign_key,
+          identifiers:      loaded_ids,
+          inverse_of:       reflection.inverse_of.try(:name),
+          limitable:        true,
+        ).call
       end
     end
 
@@ -128,8 +133,8 @@ module EvilSeed
     def transform_and_anonymize(attributes)
       customizers = configuration.customizers[model_class.to_s]
       return attributes unless customizers
-      attributes.tap do |attributes|
-        customizers.each { |customizer| customizer.call(attributes) }
+      customizers.inject(attributes) do |attrs, customizer|
+        customizer.call(attrs)
       end
     end
 
@@ -146,6 +151,10 @@ module EvilSeed
       output.write("  (#{prepare(attributes).join(', ')})")
       @tuples_written += 1
       output.write(";\n") && @tuples_written = 0 if @tuples_written == MAX_TUPLES_PER_INSERT_STMT
+    end
+
+    def finalize!
+      output.write(";\n\n") if @header_written
     end
 
     def prepare(attributes)

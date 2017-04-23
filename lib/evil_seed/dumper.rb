@@ -4,20 +4,21 @@ require 'set'
 require_relative 'root_dumper'
 
 module EvilSeed
-  # This class concatenates dumps from all root into one single file
+  # This class initiates dump creation for every root model of configuration
+  # and then concatenates dumps from all roots into one single IO.
   class Dumper
     attr_reader :configuration, :loaded_map
 
     # @param configuration [Configuration]
-    # @param output [IO] Stream to write SQL dump into
-    def initialize(configuration, output)
+    def initialize(configuration)
       @configuration = configuration
-      @loaded_map = Hash.new { |h, k| h[k] = Set.new } # stores primary keys of already dumped records for every table
-      @output = output
     end
 
-    # Generate dump and write it into provided +io+
-    def call
+    # Generate dump for this configuration and write it into provided +io+
+    # @param output [IO] Stream to write SQL dump into
+    def call(output)
+      @loaded_map = Hash.new { |h, k| h[k] = Set.new } # stores primary keys of already dumped records for every table
+      @output = output
       configuration.roots.each do |root|
         table_outputs = RootDumper.new(root, self).call
         table_outputs.each do |table_dump_io|

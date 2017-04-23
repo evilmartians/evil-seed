@@ -18,7 +18,7 @@ module EvilSeed
 
     def self.customize(model_class, &block)
       raise(ArgumentError, "You must provide block for #{__method__} method") unless block
-      customizers[model_class.to_s] << block
+      customizers[model_class.to_s] << ->(attrs) { attrs.tap(&block) } # Ensure that we're returning attrs from it
     end
 
     def self.anonymize(model_class, &block)
@@ -26,6 +26,8 @@ module EvilSeed
       customizers[model_class.to_s] << Anonymizer.new(model_class, &block)
     end
 
+    # Customizer objects for every model
+    # @return [Hash{String => Array<#call>}]
     def self.customizers
       @customizers ||= Hash.new { |h, k| h[k] = [] }
     end

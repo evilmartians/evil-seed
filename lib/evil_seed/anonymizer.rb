@@ -8,7 +8,7 @@ module EvilSeed
   #       email { Faker::Internet.email }
   #     end
   #
-  # Resulting object can be called with record attributes and will mutate them in place (be careful!)
+  # Resulting object can be called with record attributes and will return modified copy.
   #
   #     attrs = { name: 'Luke', email: 'luke@skywalker.com' }
   #     a.call(attrs)
@@ -22,12 +22,14 @@ module EvilSeed
       instance_eval(&block)
     end
 
-    # @param attributes [Hash{String=>void}] Record attributes. Will be mutated!
+    # @param attributes [Hash{String=>void}] Record attributes.
+    # @return           [Hash{String=>void}] Modified deep copy of +attributes+
     def call(attributes)
-      @changers.each do |attribute, changer|
-        attributes[attribute] = changer.call
+      attributes.deep_dup.tap do |attrs|
+        @changers.each do |attribute, changer|
+          attrs[attribute] = changer.call
+        end
       end
-      attributes
     end
 
     def respond_to_missing?(attribute_name)
