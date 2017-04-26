@@ -5,8 +5,11 @@ require 'test_helper'
 class EvilSeedTest < Minitest::Test
   def setup
     EvilSeed.configure do |config|
-      config.root('User', 'created_at > ?', Time.current - 1.day) do |root|
-        root.exclude(/.*/)
+      config.root('Forum', name: 'Descendant forum') do |root|
+        root.exclude(/parent\.children/)
+        root.exclude('forum.users')
+        root.exclude(/parent\.users/)
+        root.exclude(/role\..+/)
       end
     end
   end
@@ -29,5 +32,27 @@ class EvilSeedTest < Minitest::Test
     result = io.string
     assert_match 'INSERT INTO', result
     assert_match "'johndoe'",   result
+  end
+
+  def test_it_dumps_and_restores
+    io = StringIO.new
+    EvilSeed.dump(io)
+    result = io.string
+
+    with_restored_db do
+      execute_batch(result)
+      assert Forum.find_by(name: 'Descendant forum')
+      assert Forum.find_by(name: 'One')
+      refute Forum.find_by(name: 'Two')
+      assert User.find_by(login: 'johndoe')
+      refute User.find_by(login: 'janedoe')
+      assert User.find_by(login: 'alice')
+      assert User.find_by(login: 'bob')
+      refute User.find_by(login: 'charlie')
+      assert Role.find_by(name: 'User')
+      refute Role.find_by(name: 'Superadmin')
+      assert Question.find_by(name: 'fourth')
+      assert Question.find_by(name: 'fifth')
+    end
   end
 end

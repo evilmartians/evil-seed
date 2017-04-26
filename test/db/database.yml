@@ -7,7 +7,7 @@ common: &common
 sqlite:
   <<: *common
   adapter: sqlite3
-  database: ':memory:'
+  database: tmp/sqlite_evil_seed_test
 
 postgresql:
   <<: *common
@@ -18,3 +18,5 @@ mysql:
   <<: *common
   adapter: mysql2
   username: root
+  flags:
+    - MULTI_STATEMENTS
