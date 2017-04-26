@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 module EvilSeed
-  module Configuration
+  class Configuration
     # Configuration for dumping some root model and its associations
     class Root
       attr_reader :model, :constraints

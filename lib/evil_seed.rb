@@ -8,7 +8,7 @@ require_relative 'evil_seed/dumper'
 
 # Generate anonymized dumps for your ActiveRecord models
 module EvilSeed
-  DEFAULT_CONFIGURATION = EvilSeed::Configuration.dup
+  DEFAULT_CONFIGURATION = EvilSeed::Configuration.new
 
   def self.configure
     yield DEFAULT_CONFIGURATION

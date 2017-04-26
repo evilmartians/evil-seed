@@ -5,7 +5,7 @@ require 'test_helper'
 module EvilSeed
   class DumperTest < Minitest::Test
     def test_it_dumps_tree_structures_with_foreign_keys
-      configuration = EvilSeed::Configuration.dup
+      configuration = EvilSeed::Configuration.new
       configuration.root('Forum', name: 'Descendant forum') do |root|
         root.exclude(/parent\.children/)
         root.exclude('forum.users')
@@ -45,7 +45,7 @@ module EvilSeed
     end
 
     def test_limits_being_applied
-      configuration = EvilSeed::Configuration.dup
+      configuration = EvilSeed::Configuration.new
       configuration.root('Forum', name: 'One') do |root|
         root.exclude('forum.children')
         root.exclude('forum.users')
