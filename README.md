@@ -95,6 +95,14 @@ EvilSeed.dump('path/to/new_dump.sql')
 
  3. Look at resulted dump: there is debug comments with traversed association path. They will help you to understand which associations should be excluded.
 
+## Database compatibility
+
+This gem works with and tested against:
+
+ - PostgreSQL: any version that works with ActiveRecord should work
+ - MySQL: any version that works with ActiveRecord should work
+ - SQLite: 3.7.11 or newer is required (with support of inserting multiple rows at a time)
+
 
 ## FIXME (help wanted)
 

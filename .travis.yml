@@ -16,3 +16,10 @@ before_install:
   - gem install bundler -v 1.14.6
   - bundle install
   - appraisal install
+
+addons:
+  apt:
+    sources:
+      - travis-ci/sqlite3
+    packages:
+      - sqlite3
