@@ -65,7 +65,7 @@ module EvilSeed
     end
 
     def finalize!
-      return unless @header_written && @tuples_written.positive?
+      return unless @header_written && @tuples_written > 0
       @output.write(";\n\n")
       @tuples_written = 0
     end
