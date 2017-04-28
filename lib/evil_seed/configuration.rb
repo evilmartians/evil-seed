@@ -1,11 +1,18 @@
 # frozen_string_literal: true
 
 require_relative 'configuration/root'
+require_relative 'record_dumper'
 require_relative 'anonymizer'
 
 module EvilSeed
   # This module holds configuration for creating dump: which models and their constraints
   class Configuration
+    attr_accessor :record_dumper_class
+
+    def initialize
+      @record_dumper_class = RecordDumper
+    end
+
     def roots
       @roots ||= []
     end
