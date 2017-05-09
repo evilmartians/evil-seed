@@ -1,0 +1,22 @@
+common: &common
+  database: evil_seed_test
+  pool: 5
+  timeout: 5000
+  min_messages: ERROR
+
+sqlite:
+  <<: *common
+  adapter: sqlite3
+  database: tmp/sqlite_evil_seed_test
+
+postgresql:
+  <<: *common
+  adapter: postgresql
+  username: postgres
+
+mysql:
+  <<: *common
+  adapter: mysql2
+  username: root
+  flags:
+    - MULTI_STATEMENTS
