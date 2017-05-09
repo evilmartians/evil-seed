@@ -8,8 +8,8 @@ require 'evil_seed/version'
 Gem::Specification.new do |spec|
   spec.name          = 'evil-seed'
   spec.version       = EvilSeed::VERSION
-  spec.authors       = ['Andrey Novikov']
-  spec.email         = ['envek@envek.name']
+  spec.authors       = ['Andrey Novikov', 'Vladimir Dementyev']
+  spec.email         = ['envek@envek.name', 'palkan@evl.ms']
 
   spec.summary       = 'Create partial and anonymized production database dumps for use in development'
   spec.description   = <<-DESCRIPTION

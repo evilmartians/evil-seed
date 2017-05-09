@@ -1,26 +1,30 @@
+[![Gem Version](https://badge.fury.io/rb/evil-seed.svg)](https://rubygems.org/gems/evil-seed) [![Build Status](https://travis-ci.org/evilmartians/evil-seed.svg?branch=master)](https://travis-ci.org/evilmartians/evil-seed)
+
 # EvilSeed
 
-Gem for creating partial anonymized dumps of your database using your app model relations.
+EvilSeed is a tool for creating partial anonymized dump of your database based on your app models.
 
 <a href="https://evilmartians.com/">
 <img src="https://evilmartians.com/badges/sponsored-by-evil-martians.svg" alt="Sponsored by Evil Martians" width="236" height="54"></a>
 
-It pretends to be very useful in case of debugging intricate production bug when you absolutely need the production data to investigate it and create a fix.
+## Motivation
 
-Because production database can be extremely large and it just can't be dumped and restored in reasonable time.
+Using production-like data in your staging environment could be very useful, especially for debugging intricate production bugs.
 
-And because sometimes you don't have a right to even see production data because of sensitive information in it (personal data and etc).
+The easiest way to achieve this is to use production database backups. But that's not an option for rather large applications for two reasons: 
 
-So, all you need to debug is “all orders for today with names of created them guys being replaced with anything”.
+- production dump can be extremely large, and it just can't be dumped and restored in a reasonable time
 
-EvilSeed aims to make such dumps for you.
+- you should care about sensitive data (anonymization).
+
+EvilSeed aims to solve these problems.
 
 ## Installation
 
 Add this line to your application's Gemfile:
 
 ```ruby
-gem 'evil-seed'
+gem 'evil-seed', require: false
 ```
 
 And then execute:
@@ -36,6 +40,8 @@ Or install it yourself as:
 ### Configuration
 
 ```ruby
+require 'evil-seed'
+
 EvilSeed.configure do |config|
   # First, you should specify +root models+ and their +constraints+ to limit the number of dumped records:
   # This is like Forum.where(featured: true).all
@@ -81,27 +87,28 @@ EvilSeed.configure do |config|
 
 ### Creating dump
 
-Just call `dump` method with path where you want SQL dump file to appear!
+Just call the `#dump` method and pass a path where you want your SQL dump file to appear!
 
 ```ruby
+require 'evil-seed'
 EvilSeed.dump('path/to/new_dump.sql')
 ```
 
 ### Caveats, tips, and tricks
 
- 1. Specify `root`s for any dictionaries and system-wide models like `Role` at the top without constraints and with all associations excluded. Most probably you want all dictionaries to be present but don't want to see all the records referencing them.
+ 1. Specify `root`s for dictionaries and system-wide models like `Role` at the top without constraints and with all associations excluded.
 
- 2. Use method `exclude` aggressively. You will be amazed, how much your app's model association graph is connected. This, in conjuction with the fact that this gem traverses associations in deep-first fashion, sometimes will lead to unwanted results: some records will get into dump even if you don't want them.
+ 2. Use `exclude` aggressively. You will be amazed, how much your app's models graph is connected. This, in conjunction with the fact that this gem traverses associations in deep-first fashion, sometimes leads to unwanted results: some records will get into dump even if you don't want them.
 
- 3. Look at resulted dump: there is debug comments with traversed association path. They will help you to understand which associations should be excluded.
+ 3. Look at the resulted dump: there are some useful debug comments.
 
 ## Database compatibility
 
-This gem works with and tested against:
+This gem has been tested against:
 
  - PostgreSQL: any version that works with ActiveRecord should work
  - MySQL: any version that works with ActiveRecord should work
- - SQLite: 3.7.11 or newer is required (with support of inserting multiple rows at a time)
+ - SQLite: 3.7.11 or newer is required (with support for inserting multiple rows at a time)
 
 
 ## FIXME (help wanted)
