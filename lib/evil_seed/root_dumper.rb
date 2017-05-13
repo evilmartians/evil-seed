@@ -23,7 +23,9 @@ module EvilSeed
     # @param output [IO] Stream to write SQL dump into
     def call
       association_path = model_class.model_name.singular
-      RelationDumper.new(model_class.where(*root.constraints), self, association_path).call
+      relation = model_class.all
+      relation = relation.where(*root.constraints) if root.constraints.any? # without arguments returns not a relation
+      RelationDumper.new(relation, self, association_path).call
     end
 
     # @return [Boolean] +true+ if limits are NOT reached and +false+ otherwise

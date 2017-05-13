@@ -11,6 +11,9 @@ class EvilSeedTest < Minitest::Test
         root.exclude(/parent\.users/)
         root.exclude(/role\..+/)
       end
+      config.root('Question') do |root|
+        root.exclude(/.*/)
+      end
     end
   end
 
