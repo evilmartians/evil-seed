@@ -1,5 +1,12 @@
 # frozen_string_literal: true
 
+# As method ActiveRecord::Relation#in_batches is available only since ActiveRecord 5.0
+# we will backport it only for us via refinements for ActiveRecord 4.2 compatibility.
+unless ActiveRecord::Batches.instance_methods(false).include?(:in_batches)
+  require_relative 'refinements/in_batches'
+  using EvilSeed::Refinements::InBatches
+end
+
 module EvilSeed
   # This class performs actual dump generation for single relation and all its not yet loaded dependencies
   #
