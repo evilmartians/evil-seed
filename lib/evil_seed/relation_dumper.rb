@@ -144,7 +144,7 @@ module EvilSeed
         next false if reflection.options[:polymorphic] # TODO: Add support for polymorphic belongs_to
         excluded = root.excluded?("#{association_path}.#{reflection.name}") || reflection.name == inverse_reflection
         if excluded
-          nullify_columns << reflection.foreign_key
+          nullify_columns << reflection.foreign_key if model_class.attribute_names.include?(reflection.foreign_key)
         else
           foreign_keys[reflection.name] = reflection.foreign_key
           table_names[reflection.name]  = reflection.table_name

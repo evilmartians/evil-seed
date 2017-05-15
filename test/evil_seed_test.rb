@@ -14,6 +14,9 @@ class EvilSeedTest < Minitest::Test
       config.root('Question') do |root|
         root.exclude(/.*/)
       end
+      config.root('Role') do |root|
+        root.exclude(/\Arole\.(?!roles_users\z)/) # Take only join table and nothing more
+      end
     end
   end
 
@@ -53,7 +56,7 @@ class EvilSeedTest < Minitest::Test
       assert User.find_by(login: 'bob')
       refute User.find_by(login: 'charlie')
       assert Role.find_by(name: 'User')
-      refute Role.find_by(name: 'Superadmin')
+      assert Role.find_by(name: 'Superadmin')
       assert Question.find_by(name: 'fourth')
       assert Question.find_by(name: 'fifth')
     end
