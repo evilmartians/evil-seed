@@ -12,11 +12,11 @@ sqlite:
 postgresql:
   <<: *common
   adapter: postgresql
-  username: postgres
+  username: <%= ENV['ES_PG_USER'] || 'postgres' %>
 
 mysql:
   <<: *common
   adapter: mysql2
-  username: root
+  username: <%= ENV['ES_PG_USER'] || 'root' %>
   flags:
     - MULTI_STATEMENTS

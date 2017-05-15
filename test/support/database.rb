@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative '../db/schema'
+require 'erb'
 
 def database
   ENV['DB'] ||= 'postgresql'
@@ -12,7 +13,7 @@ ActiveRecord::Base.logger = log
 ActiveRecord::Migration.verbose = false
 
 database_yml_path = File.expand_path(File.join(File.dirname(__FILE__), '..', 'db', 'database.yml'))
-ActiveRecord::Base.configurations = YAML.safe_load(File.read(database_yml_path), [], [], true)
+ActiveRecord::Base.configurations = YAML.safe_load(ERB.new(File.read(database_yml_path)).result, [], [], true)
 
 def database_config
   ActiveRecord::Base.configurations[database]

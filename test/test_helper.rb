@@ -7,6 +7,8 @@ require 'minitest/autorun'
 
 require_relative 'support/database.rb'
 
+puts "Using #{database}"
+
 # Temporarily reconnects whole ActiveRecord to DB for testing dump restoration
 def with_restored_db
   original_connection = ActiveRecord::Base.remove_connection

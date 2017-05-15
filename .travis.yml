@@ -1,21 +1,6 @@
 cache: bundler
 sudo: false
 language: ruby
-rvm:
-  - 2.4.1
-  - 2.3.4
-  - 2.2.7
-gemfile:
-  - gemfiles/activerecord-5-0.gemfile
-  - gemfiles/activerecord-4-2.gemfile
-env:
-  - DB=postgresql
-  - DB=sqlite
-  - DB=mysql
-before_install:
-  - gem install bundler -v 1.14.6
-  - bundle install
-  - appraisal install
 
 addons:
   apt:
@@ -23,3 +8,21 @@ addons:
       - travis-ci/sqlite3
     packages:
       - sqlite3
+
+matrix:
+  include:
+    - rvm: 2.4.1
+      gemfile: gemfiles/activerecord_5_0.gemfile
+      env: "DB=sqlite"
+    - rvm: 2.4.1
+      gemfile: gemfiles/activerecord_5_0.gemfile
+      env: "DB=postgresql"
+    - rvm: 2.4.1
+      gemfile: gemfiles/activerecord_5_0.gemfile
+      env: "DB=mysql"
+    - rvm: 2.3.4
+      gemfile: gemfiles/activerecord_4_2.gemfile
+      env: "DB=postgresql"
+    - rvm: 2.3.4
+      gemfile: gemfiles/activerecord_4_2.gemfile
+      env: "DB=mysql"

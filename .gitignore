@@ -8,3 +8,4 @@
 /spec/reports/
 /tmp/
 /gemfiles/*.lock
+*.gem

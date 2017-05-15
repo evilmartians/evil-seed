@@ -7,4 +7,4 @@ gem "pg"
 gem "sqlite3"
 gem "activerecord", "~> 5.0.0"
 
-gemspec path: "../"
+gemspec path: ".."
