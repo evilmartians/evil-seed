@@ -40,7 +40,7 @@ Or install it yourself as:
 ### Configuration
 
 ```ruby
-require 'evil-seed'
+require 'evil_seed'
 
 EvilSeed.configure do |config|
   # First, you should specify +root models+ and their +constraints+ to limit the number of dumped records:
@@ -90,7 +90,7 @@ EvilSeed.configure do |config|
 Just call the `#dump` method and pass a path where you want your SQL dump file to appear!
 
 ```ruby
-require 'evil-seed'
+require 'evil_seed'
 EvilSeed.dump('path/to/new_dump.sql')
 ```
 
