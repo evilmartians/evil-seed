@@ -1,4 +1,6 @@
-[![Gem Version](https://badge.fury.io/rb/evil-seed.svg)](https://rubygems.org/gems/evil-seed) [![Build Status](https://travis-ci.org/evilmartians/evil-seed.svg?branch=master)](https://travis-ci.org/evilmartians/evil-seed)
+[![Gem Version](https://badge.fury.io/rb/evil-seed.svg)](https://rubygems.org/gems/evil-seed)
+[![Build Status](https://travis-ci.org/evilmartians/evil-seed.svg?branch=master)](https://travis-ci.org/evilmartians/evil-seed)
+[![Cult of Martians](http://cultofmartians.com/assets/badges/badge.svg)](http://cultofmartians.com/tasks/evil-seed.html)
 
 # EvilSeed
 
