@@ -11,19 +11,46 @@ addons:
 
 matrix:
   include:
-    - rvm: 2.4.1
+    - rvm: 2.5.0
+      gemfile: gemfiles/activerecord_master.gemfile
+      env: "DB=sqlite"
+    - rvm: 2.5.0
+      gemfile: gemfiles/activerecord_master.gemfile
+      env: "DB=postgresql"
+    - rvm: 2.5.0
+      gemfile: gemfiles/activerecord_master.gemfile
+      env: "DB=mysql"
+    - rvm: 2.5.0
+      gemfile: gemfiles/activerecord_5_2.gemfile
+      env: "DB=sqlite"
+    - rvm: 2.5.0
+      gemfile: gemfiles/activerecord_5_2.gemfile
+      env: "DB=postgresql"
+    - rvm: 2.5.0
+      gemfile: gemfiles/activerecord_5_2.gemfile
+      env: "DB=mysql"
+    - rvm: 2.5.0
+      gemfile: gemfiles/activerecord_5_1.gemfile
+      env: "DB=sqlite"
+    - rvm: 2.5.0
+      gemfile: gemfiles/activerecord_5_1.gemfile
+      env: "DB=postgresql"
+    - rvm: 2.5.0
+      gemfile: gemfiles/activerecord_5_1.gemfile
+      env: "DB=mysql"
+    - rvm: 2.4.3
       gemfile: gemfiles/activerecord_5_0.gemfile
       env: "DB=sqlite"
-    - rvm: 2.4.1
+    - rvm: 2.4.3
       gemfile: gemfiles/activerecord_5_0.gemfile
       env: "DB=postgresql"
-    - rvm: 2.4.1
+    - rvm: 2.4.3
       gemfile: gemfiles/activerecord_5_0.gemfile
       env: "DB=mysql"
-    - rvm: 2.3.4
+    - rvm: 2.3.6
       gemfile: gemfiles/activerecord_4_2.gemfile
       env: "DB=postgresql"
-    - rvm: 2.3.4
+    - rvm: 2.3.6
       gemfile: gemfiles/activerecord_4_2.gemfile
       env: "DB=sqlite"
     # Please note that gem can't be tested against MySQL on ActiveRecord 4.2 (Dump and restore test doesn't work)!

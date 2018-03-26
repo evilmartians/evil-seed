@@ -2,9 +2,8 @@
 
 source "https://rubygems.org"
 
-gem "mysql2"
-gem "pg"
-gem "sqlite3"
 gem "activerecord", "~> 4.2.0"
+gem "pg", "~> 0.20"
+gem "mysql2", "~> 0.3.18"
 
-gemspec path: ".."
+gemspec path: "../"
