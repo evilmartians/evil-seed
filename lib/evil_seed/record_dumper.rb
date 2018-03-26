@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+require 'tempfile'
 
 module EvilSeed
   #  - Runs all transformation objects for every tuple

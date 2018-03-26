@@ -124,6 +124,53 @@ This gem has been tested against:
  3. Some internal refactoring is required
 
 
+## Standalone usage
+
+If you want to use it as a standalone application, you can place exerything in a single file like this:
+
+```ruby
+#!/usr/bin/env ruby
+
+require 'bundler/inline'
+
+gemfile do
+  source 'https://rubygems.org'
+  gem 'activerecord'
+  gem 'evil-seed'
+  gem 'mysql2'
+end
+
+# Describe your database layout with ActiveRecord models.
+# See http://guides.rubyonrails.org/active_record_basics.html
+
+class Category < ActiveRecord::Base
+  has_many :translations, class_name: "Category::Translation"
+end
+
+class Category::Translation < ActiveRecord::Base
+  belongs_to :category, inverse_of: :translations
+end
+
+# Configure evil-seed itself
+EvilSeed.configure do |config|
+  config.root("Category", "id < ?", 1000)
+end
+
+# Connect to your database.
+# See http://guides.rubyonrails.org/configuring.html#configuring-a-database)
+ActiveRecord::Base.establish_connection(ENV.fetch("DATABASE_URL"))
+
+# Create dump in dump.sql file in the same directory as this script
+EvilSeed.dump(File.join(__dir__, "dump.sql").to_s)
+```
+
+And launch it like so:
+
+```sh
+DATABASE_URL=mysql2://user:pass@host/db ruby path/to/your/script.rb
+```
+
+
 ## Development
 
 After checking out the repo, run `bin/setup` to install dependencies. Then, run `rake test` to run the tests. You can also run `bin/console` for an interactive prompt that will allow you to experiment.
