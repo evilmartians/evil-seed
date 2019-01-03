@@ -4,4 +4,18 @@ source "https://rubygems.org"
 
 gem "activerecord", git: "https://github.com/rails/rails.git"
 
+platforms :mri do
+  gem "pg", ">= 0.20"
+  gem "mysql2"
+  gem "sqlite3"
+  gem "pry-byebug"
+end
+
+platforms :jruby do
+  gem "activerecord-jdbcpostgresql-adapter"
+  gem "activerecord-jdbcmysql-adapter"
+  gem "activerecord-jdbcsqlite3-adapter"
+  gem "pry-debugger-jruby"
+end
+
 gemspec path: "../"

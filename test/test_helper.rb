@@ -3,6 +3,7 @@
 $LOAD_PATH.unshift File.expand_path('../../lib', __FILE__)
 require 'evil_seed'
 
+require 'pry'
 require 'minitest/autorun'
 
 require_relative 'support/database.rb'
@@ -24,7 +25,7 @@ def execute_batch(sql)
   connection = ActiveRecord::Base.connection
   case database
   when 'sqlite'
-    connection.raw_connection.execute_batch(sql)
+    connection.raw_connection.send(:execute_batch, sql)
   when 'mysql'
     connection.execute(sql)
     # Hack for MySQL2

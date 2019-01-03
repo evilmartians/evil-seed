@@ -8,6 +8,7 @@ module EvilSeed
     # The ActiveRecord MIT license is obviously compatible with our license (MIT also)
     module InBatches
       refine ActiveRecord::Relation do
+        using EvilSeed::Refinements::InBatches
 
         # This is from active_record/core
         def arel_attribute(name, table = klass.arel_table) # :nodoc:
