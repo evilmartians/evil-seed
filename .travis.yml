@@ -19,40 +19,58 @@ before_install: gem install bundler -v '~> 1.17'
 
 matrix:
   include:
-    - rvm: 2.6.0
+    - rvm: 3.0.2
       gemfile: gemfiles/activerecord_master.gemfile
       env: "DB=sqlite"
-    - rvm: 2.6.0
+    - rvm: 3.0.2
       gemfile: gemfiles/activerecord_master.gemfile
       env: "DB=postgresql"
-    - rvm: 2.6.0
+    - rvm: 3.0.2
       gemfile: gemfiles/activerecord_master.gemfile
       env: "DB=mysql"
-    - rvm: 2.6.0
+    - rvm: 2.7.4
+      gemfile: gemfiles/activerecord_6_1.gemfile
+      env: "DB=sqlite"
+    - rvm: 2.7.4
+      gemfile: gemfiles/activerecord_6_1.gemfile
+      env: "DB=postgresql"
+    - rvm: 2.7.4
+      gemfile: gemfiles/activerecord_6_1.gemfile
+      env: "DB=mysql"
+    - rvm: 2.7.4
+      gemfile: gemfiles/activerecord_6_0.gemfile
+      env: "DB=sqlite"
+    - rvm: 2.7.4
+      gemfile: gemfiles/activerecord_6_0.gemfile
+      env: "DB=postgresql"
+    - rvm: 2.7.4
+      gemfile: gemfiles/activerecord_6_0.gemfile
+      env: "DB=mysql"
+    - rvm: 2.6.8
       gemfile: gemfiles/activerecord_5_2.gemfile
       env: "DB=sqlite"
-    - rvm: 2.6.0
+    - rvm: 2.6.8
       gemfile: gemfiles/activerecord_5_2.gemfile
       env: "DB=postgresql"
-    - rvm: 2.6.0
+    - rvm: 2.6.8
       gemfile: gemfiles/activerecord_5_2.gemfile
       env: "DB=mysql"
-    - rvm: 2.5.3
+    - rvm: 2.5.9
       gemfile: gemfiles/activerecord_5_1.gemfile
       env: "DB=sqlite"
-    - rvm: 2.5.3
+    - rvm: 2.5.9
       gemfile: gemfiles/activerecord_5_1.gemfile
       env: "DB=postgresql"
-    - rvm: 2.5.3
+    - rvm: 2.5.9
       gemfile: gemfiles/activerecord_5_1.gemfile
       env: "DB=mysql"
-    - rvm: 2.4.5
+    - rvm: 2.4.10
       gemfile: gemfiles/activerecord_5_0.gemfile
       env: "DB=sqlite"
-    - rvm: 2.4.5
+    - rvm: 2.4.10
       gemfile: gemfiles/activerecord_5_0.gemfile
       env: "DB=postgresql"
-    - rvm: 2.4.5
+    - rvm: 2.4.10
       gemfile: gemfiles/activerecord_5_0.gemfile
       env: "DB=mysql"
     - rvm: 2.3.8

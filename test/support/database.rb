@@ -16,7 +16,11 @@ database_yml_path = File.expand_path(File.join(File.dirname(__FILE__), '..', 'db
 ActiveRecord::Base.configurations = YAML.safe_load(ERB.new(File.read(database_yml_path)).result, [], [], true)
 
 def database_config
-  ActiveRecord::Base.configurations[database]
+  if ActiveRecord.version >= Gem::Version.new("6.1") # See https://github.com/rails/rails/pull/38256
+    ActiveRecord::Base.configurations.configs_for(env_name: database).first.configuration_hash.stringify_keys
+  else
+    ActiveRecord::Base.configurations[database].stringify_keys
+  end
 end
 
 def restored_database_config
