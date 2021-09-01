@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require 'active_support/core_ext/array/grouping'
+
 # As method ActiveRecord::Relation#in_batches is available only since ActiveRecord 5.0
 # we will backport it only for us via refinements for ActiveRecord 4.2 compatibility.
 unless ActiveRecord::Batches.instance_methods(false).include?(:in_batches)
