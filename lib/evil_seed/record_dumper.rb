@@ -53,7 +53,7 @@ module EvilSeed
     def insert_statement
       connection = model_class.connection
       table_name = connection.quote_table_name(model_class.table_name)
-      columns    = model_class.attribute_names.map { |c| connection.quote_column_name(c) }.join(', ')
+      columns    = model_class.column_names.map { |c| connection.quote_column_name(c) }.join(', ')
       "INSERT INTO #{table_name} (#{columns}) VALUES\n"
     end
 
@@ -73,27 +73,8 @@ module EvilSeed
 
     def prepare(attributes)
       attributes.map do |key, value|
-        model_class.connection.quote(serialize(attribute_types[key], value))
-      end
-    end
-
-    # Handles ActiveRecord API differences between AR 4.2 and 5.0
-    def attribute_types
-      return @attribute_types if defined?(@attribute_types)
-      @attribute_types = if model_class.respond_to?(:attribute_types)
-                           model_class.attribute_types
-                         else
-                           model_class.column_types
-                         end
-    end
-
-    # Handles ActiveRecord API differences between AR 4.2 and 5.0
-    # Casts a value from the ruby type to a type that the database knows how to understand.
-    def serialize(type, value)
-      if type.respond_to?(:serialize)
-        type.serialize(value)
-      else
-        type.type_cast_for_database(value)
+        type = model_class.attribute_types[key]
+        model_class.connection.quote(type.serialize(value))
       end
     end
   end

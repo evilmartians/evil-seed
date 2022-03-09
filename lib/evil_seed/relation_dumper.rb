@@ -124,8 +124,8 @@ module EvilSeed
     # @param relation [ActiveRecord::Relation]
     # @return [Array<Hash{String => String, Integer, Float, Boolean, nil}>]
     def fetch_attributes(relation)
-      relation.pluck(*model_class.attribute_names).map do |row|
-        Hash[model_class.attribute_names.zip(row)]
+      relation.pluck(*model_class.column_names).map do |row|
+        Hash[model_class.column_names.zip(row)]
       end
     end
 
@@ -146,7 +146,7 @@ module EvilSeed
         next false if reflection.options[:polymorphic] # TODO: Add support for polymorphic belongs_to
         excluded = root.excluded?("#{association_path}.#{reflection.name}") || reflection.name == inverse_reflection
         if excluded
-          nullify_columns << reflection.foreign_key if model_class.attribute_names.include?(reflection.foreign_key)
+          nullify_columns << reflection.foreign_key if model_class.column_names.include?(reflection.foreign_key)
         else
           foreign_keys[reflection.name] = reflection.foreign_key
           table_names[reflection.name]  = reflection.table_name

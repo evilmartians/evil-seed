@@ -13,6 +13,8 @@ end
 
 class Profile < ActiveRecord::Base
   belongs_to :user
+
+  attribute :virtual, :string
 end
 
 class Role < ActiveRecord::Base
