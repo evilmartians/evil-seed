@@ -72,10 +72,12 @@ EvilSeed.configure do |config|
   end
 
   # Transformations allows you to change dumped data e. g. to hide sensitive information
-  config.customize("User") do |user_attributes|
+  config.customize("User") do |u|
     # Reset password for all users to the same for ease of debugging on developer's machine
     u["encrypted_password"] = encrypt("qwerty")
-    u["created_at"]         =
+    # Reset or mutate other attributes at your convenience
+    u["metadata"].merge!("foo" => "bar")
+    u["created_at"] = Time.current
     # Please note that there you have only hash of record attributes, not the record itself!
   end
 
@@ -84,6 +86,7 @@ EvilSeed.configure do |config|
   config.anonymize("User")
     name  { Faker::Name.name }
     email { Faker::Internet.email }
+    login { |login| "#{login}-test" }
   end
 ```
 

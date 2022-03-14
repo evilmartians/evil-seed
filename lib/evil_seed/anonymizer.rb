@@ -27,7 +27,7 @@ module EvilSeed
     def call(attributes)
       attributes.deep_dup.tap do |attrs|
         @changers.each do |attribute, changer|
-          attrs[attribute] = changer.call
+          attrs[attribute] = changer.call(attrs[attribute])
         end
       end
     end

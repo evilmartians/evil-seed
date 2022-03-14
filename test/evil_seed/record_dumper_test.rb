@@ -22,6 +22,7 @@ module EvilSeed
       end
       @configuration.anonymize('User') do
         email { 'user@example.com' }
+        login { |login| login+'-test' }
       end
     end
 
@@ -30,8 +31,8 @@ module EvilSeed
       rd.call('id' => 1, 'login' => 'randall',  'password' => 'correcthorsebatterystaple', 'email' => 'xkcd@xkcd.com')
       rd.call('id' => 2, 'login' => 'jcdenton', 'password' => 'amihuman', 'email' => 'jcd@daedalus.net')
       result = rd.result.tap(&:rewind).read
-      assert_match(/'randall'/,  result)
-      assert_match(/'jcdenton'/, result)
+      assert_match(/'randall-test'/,  result)
+      assert_match(/'jcdenton-test'/, result)
     end
 
     def test_it_does_not_dump_already_dumped_records
@@ -45,6 +46,8 @@ module EvilSeed
       rd = RecordDumper.new(User, @configuration, @relation_dumper)
       rd.call('id' => 2, 'login' => 'jcdenton', 'password' => 'amihuman', 'email' => 'jcd@daedalus.net')
       result = rd.result.tap(&:rewind).read
+      refute_match(/'jcdenton'/, result)
+      assert_match(/'jcdenton-test'/, result)
       refute_match(/'amihuman'/, result)
       assert_match(/'12345678'/, result)
       refute_match(/'jcd@daedalus.net'/, result)
