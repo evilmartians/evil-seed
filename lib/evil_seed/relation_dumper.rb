@@ -25,13 +25,15 @@ module EvilSeed
 
     attr_reader :relation, :root_dumper, :model_class, :association_path, :search_key, :identifiers, :nullify_columns,
                 :belongs_to_reflections, :has_many_reflections, :foreign_keys, :loaded_ids, :to_load_map,
-                :record_dumper, :inverse_reflection, :table_names, :options
+                :record_dumper, :inverse_reflection, :table_names, :options,
+                :current_deep, :verbose
 
-    delegate :root, :configuration, :total_limit, :loaded_map, to: :root_dumper
+    delegate :root, :configuration, :dont_nullify, :total_limit, :deep_limit, :loaded_map, to: :root_dumper
 
     def initialize(relation, root_dumper, association_path, **options)
       @relation               = relation
       @root_dumper            = root_dumper
+      @verbose                = configuration.verbose
       @identifiers            = options[:identifiers]
       @to_load_map            = Hash.new { |h, k| h[k] = [] }
       @foreign_keys           = Hash.new { |h, k| h[k] = [] }
@@ -46,31 +48,45 @@ module EvilSeed
       @belongs_to_reflections = setup_belongs_to_reflections
       @has_many_reflections   = setup_has_many_reflections
       @options                = options
+      @current_deep           = association_path.split('.').size
+      @dont_nullify           = dont_nullify
+
+      puts("- #{association_path}") if verbose
     end
 
     # Generate dump and write it into +io+
     # @return [Array<IO>] List of dump IOs for separate tables in order of dependencies (belongs_to are first)
     def call
       dump!
-      belongs_to_dumps = dump_belongs_to_associations!
-      has_many_dumps   = dump_has_many_associations!
-      [belongs_to_dumps, record_dumper.result, has_many_dumps].flatten.compact
+      if deep_limit and current_deep > deep_limit
+        [record_dumper.result].flatten.compact
+      else
+        belongs_to_dumps = dump_belongs_to_associations!
+        has_many_dumps   = dump_has_many_associations!
+        [belongs_to_dumps, record_dumper.result, has_many_dumps].flatten.compact
+      end
     end
 
     private
 
     def dump!
       if identifiers.present?
+        puts("  # #{search_key} => #{identifiers}") if verbose
         # Don't use AR::Base#find_each as we will get error on Oracle if we will have more than 1000 ids in IN statement
         identifiers.in_groups_of(MAX_IDENTIFIERS_IN_IN_STMT).each do |ids|
-          fetch_attributes(relation.where(search_key => ids.compact)).each do |attributes|
+          attrs = fetch_attributes(relation.where(search_key => ids.compact))
+          puts(" -- dumped #{attrs.size}") if verbose
+          attrs.each do |attributes|
             next unless check_limits!
             dump_record!(attributes)
           end
         end
       else
+        puts("  # #{relation.count}") if verbose
         relation.in_batches do |relation|
-          fetch_attributes(relation).each do |attributes|
+          attrs = fetch_attributes(relation)
+          puts(" -- dumped #{attrs.size}") if verbose
+          attrs.each do |attributes|
             next unless check_limits!
             dump_record!(attributes)
           end
@@ -79,8 +95,10 @@ module EvilSeed
     end
 
     def dump_record!(attributes)
-      nullify_columns.each do |nullify_column|
-        attributes[nullify_column] = nil
+      unless dont_nullify
+        nullify_columns.each do |nullify_column|
+          attributes[nullify_column] = nil
+        end
       end
       return unless record_dumper.call(attributes)
       foreign_keys.each do |reflection_name, fk_column|
@@ -135,7 +153,11 @@ module EvilSeed
     end
 
     def build_relation(reflection)
-      relation = reflection.klass.all
+      if configuration.unscoped
+        relation = reflection.klass.unscoped
+      else
+        relation = reflection.klass.all
+      end
       relation = relation.instance_eval(&reflection.scope) if reflection.scope
       relation = relation.where(reflection.type => model_class.to_s) if reflection.options[:as] # polymorphic
       relation
@@ -144,9 +166,13 @@ module EvilSeed
     def setup_belongs_to_reflections
       model_class.reflect_on_all_associations(:belongs_to).reject do |reflection|
         next false if reflection.options[:polymorphic] # TODO: Add support for polymorphic belongs_to
+        included = root.included?("#{association_path}.#{reflection.name}")
         excluded = root.excluded?("#{association_path}.#{reflection.name}") || reflection.name == inverse_reflection
-        if excluded
-          nullify_columns << reflection.foreign_key if model_class.column_names.include?(reflection.foreign_key)
+        if excluded and not included
+          if model_class.column_names.include?(reflection.foreign_key)
+            puts(" -- excluded #{reflection.foreign_key}") if verbose
+            nullify_columns << reflection.foreign_key
+          end
         else
           foreign_keys[reflection.name] = reflection.foreign_key
           table_names[reflection.name]  = reflection.table_name
@@ -157,10 +183,15 @@ module EvilSeed
 
     # This method returns only direct has_one and has_many reflections. For HABTM it returns intermediate has_many
     def setup_has_many_reflections
+      puts(" -- reflections #{model_class._reflections.keys}") if verbose
       model_class._reflections.select do |_reflection_name, reflection|
         next false if model_class.primary_key.nil?
+
         next false if reflection.is_a?(ActiveRecord::Reflection::ThroughReflection)
-        %i[has_one has_many].include?(reflection.macro) && !root.excluded?("#{association_path}.#{reflection.name}")
+
+        included = root.included?("#{association_path}.#{reflection.name}")
+        excluded = root.excluded?("#{association_path}.#{reflection.name}") || reflection.name == inverse_reflection
+        %i[has_one has_many].include?(reflection.macro) && !(excluded and not included)
       end.map(&:second)
     end
   end

@@ -53,13 +53,17 @@ module EvilSeed
     def insert_statement
       connection = model_class.connection
       table_name = connection.quote_table_name(model_class.table_name)
-      columns    = model_class.column_names.map { |c| connection.quote_column_name(c) }.join(', ')
-      "INSERT INTO #{table_name} (#{columns}) VALUES\n"
+      columns    = model_class.column_names.select { |c| !configuration.skip_columns[model_class.table_name]&.include?(c) }
+      columns    = columns.map { |c| connection.quote_column_name(c) }
+      "INSERT INTO #{table_name} (#{columns.join(', ')}) VALUES\n"
     end
 
     def write!(attributes)
+      puts("-- #{relation_dumper.association_path}\n") if configuration.verbose_sql
       @output.write("-- #{relation_dumper.association_path}\n") && @header_written = true unless @header_written
+      puts(@tuples_written.zero? ? insert_statement : ",\n") if configuration.verbose_sql
       @output.write(@tuples_written.zero? ? insert_statement : ",\n")
+      puts("  (#{prepare(attributes).join(', ')})") if configuration.verbose_sql
       @output.write("  (#{prepare(attributes).join(', ')})")
       @tuples_written += 1
       @output.write(";\n") && @tuples_written = 0 if @tuples_written == MAX_TUPLES_PER_INSERT_STMT
@@ -73,9 +77,10 @@ module EvilSeed
 
     def prepare(attributes)
       attributes.map do |key, value|
+        next if configuration.skip_columns[model_class.table_name]&.include?(key)
         type = model_class.attribute_types[key]
         model_class.connection.quote(type.serialize(value))
-      end
+      end.flatten.compact
     end
   end
 end
