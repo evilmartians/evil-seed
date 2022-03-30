@@ -177,7 +177,7 @@ module EvilSeed
           foreign_keys[reflection.name] = reflection.foreign_key
           table_names[reflection.name]  = reflection.table_name
         end
-        excluded
+        excluded and not included
       end
     end
 
