@@ -50,14 +50,21 @@ module EvilSeed
       end
     end
 
+    def insertable_column_names
+      model_class.columns_hash.reject { |k,v| v.virtual? }.keys
+    end
+
     def insert_statement
       connection = model_class.connection
       table_name = connection.quote_table_name(model_class.table_name)
-      columns    = model_class.column_names.map { |c| connection.quote_column_name(c) }.join(', ')
+      columns    = insertable_column_names.join(', ')
       "INSERT INTO #{table_name} (#{columns}) VALUES\n"
     end
 
     def write!(attributes)
+      # Remove non-insertable columns from attributes
+      attributes = attributes.slice(*insertable_column_names)
+
       @output.write("-- #{relation_dumper.association_path}\n") && @header_written = true unless @header_written
       @output.write(@tuples_written.zero? ? insert_statement : ",\n")
       @output.write("  (#{prepare(attributes).join(', ')})")
