@@ -51,13 +51,15 @@ module EvilSeed
     end
 
     def insertable_column_names
-      model_class.columns_hash.reject { |k,v| v.virtual? }.keys
+      model_class.columns_hash.reject do |k,v|
+        v.respond_to?(:virtual?) ? v.virtual? : false
+      end.keys
     end
 
     def insert_statement
       connection = model_class.connection
       table_name = connection.quote_table_name(model_class.table_name)
-      columns    = insertable_column_names.join(', ')
+      columns    = insertable_column_names.map { |c| connection.quote_column_name(c) }.join(', ')
       "INSERT INTO #{table_name} (#{columns}) VALUES\n"
     end
 
