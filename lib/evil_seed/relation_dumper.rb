@@ -60,6 +60,8 @@ module EvilSeed
     private
 
     def dump!
+      original_ignored_columns = model_class.ignored_columns
+      model_class.ignored_columns += Array(configuration.ignored_columns_for(model_class.sti_name))
       if identifiers.present?
         # Don't use AR::Base#find_each as we will get error on Oracle if we will have more than 1000 ids in IN statement
         identifiers.in_groups_of(MAX_IDENTIFIERS_IN_IN_STMT).each do |ids|
@@ -76,6 +78,8 @@ module EvilSeed
           end
         end
       end
+    ensure
+      model_class.ignored_columns = original_ignored_columns
     end
 
     def dump_record!(attributes)

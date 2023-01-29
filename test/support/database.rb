@@ -13,7 +13,12 @@ ActiveRecord::Base.logger = log
 ActiveRecord::Migration.verbose = false
 
 database_yml_path = File.expand_path(File.join(File.dirname(__FILE__), '..', 'db', 'database.yml'))
-ActiveRecord::Base.configurations = YAML.safe_load(ERB.new(File.read(database_yml_path)).result, [], [], true)
+if Gem::Version.new(Psych::VERSION) >= Gem::Version.new('3.1.0.pre1')
+  ActiveRecord::Base.configurations = YAML.safe_load(ERB.new(File.read(database_yml_path)).result, aliases: true)
+else
+  ActiveRecord::Base.configurations = YAML.safe_load(ERB.new(File.read(database_yml_path)).result, [], [], true)
+end
+
 
 def database_config
   if ActiveRecord.version >= Gem::Version.new("6.1") # See https://github.com/rails/rails/pull/38256

@@ -17,6 +17,8 @@ class EvilSeedTest < Minitest::Test
       config.root('Role') do |root|
         root.exclude(/\Arole\.(?!roles_users\z)/) # Take only join table and nothing more
       end
+
+      config.ignore_columns("Profile", :name)
     end
   end
 
@@ -59,6 +61,7 @@ class EvilSeedTest < Minitest::Test
       assert Role.find_by(name: 'Superadmin')
       assert Question.find_by(name: 'fourth')
       assert Question.find_by(name: 'fifth')
+      assert Profile.where.not(name: nil).none?
     end
   end
 end
