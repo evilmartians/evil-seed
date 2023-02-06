@@ -88,6 +88,7 @@ EvilSeed.configure do |config|
     email { Faker::Internet.email }
     login { |login| "#{login}-test" }
   end
+end
 ```
 
 ### Creating dump
