@@ -95,6 +95,7 @@ EvilSeed.configure do |config|
   # This will remove the columns even if the model is not a root node and is
   # dumped via an association.
   config.ignore_columns("Profile", :name)
+end
 ```
 
 ### Creating dump
