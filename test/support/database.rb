@@ -19,7 +19,6 @@ else
   ActiveRecord::Base.configurations = YAML.safe_load(ERB.new(File.read(database_yml_path)).result, [], [], true)
 end
 
-
 def database_config
   if ActiveRecord.version >= Gem::Version.new("6.1") # See https://github.com/rails/rails/pull/38256
     ActiveRecord::Base.configurations.configs_for(env_name: database).first.configuration_hash.stringify_keys
