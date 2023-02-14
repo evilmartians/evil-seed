@@ -3,36 +3,36 @@ name: Tests
 on:
   push:
     branches:
-      - master
+      - '**'
     tags-ignore:
       - 'v*'
   pull_request:
 
 jobs:
   test:
-    name: Ruby ${{ matrix.ruby }}, ActiveRecord ${{ matrix.rails }}, ${{ matrix.database }}
+    name: Ruby ${{ matrix.ruby }}, ActiveRecord ${{ matrix.activerecord }}, ${{ matrix.database }}
     strategy:
-      fail-fast: true
+      fail-fast: false
       matrix:
         include:
-#          - ruby: "3.2"
-#            activerecord: "7.0"
-#            database: postgresql
-#          - ruby: "3.2"
-#            activerecord: "7.0"
-#            database: mysql
+          - ruby: "3.2"
+            activerecord: "7.0"
+            database: postgresql
+          - ruby: "3.2"
+            activerecord: "7.0"
+            database: mysql
           - ruby: "3.2"
             activerecord: "7.0"
             database: sqlite
-#          - ruby: "3.1"
-#            activerecord: "6.1"
-#            database: sqlite
-#          - ruby: "3.0"
-#            activerecord: "6.0"
-#            database: sqlite
-#          - ruby: "2.7"
-#            activerecord: "5.2"
-#            database: sqlite
+          - ruby: "3.1"
+            activerecord: "6.1"
+            database: sqlite
+          - ruby: "3.0"
+            activerecord: "6.0"
+            database: sqlite
+          - ruby: "2.7"
+            activerecord: "5.2"
+            database: sqlite
 
     runs-on: ubuntu-latest
 
@@ -60,6 +60,10 @@ jobs:
 
     env:
       CI: true
+      ACTIVERECORD_VERSION: "~> ${{ matrix.activerecord }}"
+      DB: "${{ matrix.database }}"
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
 
     steps:
       - uses: actions/checkout@v3
