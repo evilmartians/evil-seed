@@ -88,6 +88,13 @@ EvilSeed.configure do |config|
     email { Faker::Internet.email }
     login { |login| "#{login}-test" }
   end
+
+  # You can ignore columns for any model. This is specially useful when working
+  # with encrypted columns.
+  #
+  # This will remove the columns even if the model is not a root node and is
+  # dumped via an association.
+  config.ignore_columns("Profile", :name)
 end
 ```
 

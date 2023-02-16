@@ -11,6 +11,7 @@ module EvilSeed
 
     def initialize
       @record_dumper_class = RecordDumper
+      @ignored_columns = Hash.new { |h, k| h[k] = [] }
     end
 
     def roots
@@ -33,10 +34,18 @@ module EvilSeed
       customizers[model_class.to_s] << Anonymizer.new(model_class, &block)
     end
 
+    def ignore_columns(model_class, *columns)
+      @ignored_columns[model_class] += columns
+    end
+
     # Customizer objects for every model
     # @return [Hash{String => Array<#call>}]
     def customizers
       @customizers ||= Hash.new { |h, k| h[k] = [] }
+    end
+
+    def ignored_columns_for(model_class)
+      @ignored_columns[model_class]
     end
   end
 end
