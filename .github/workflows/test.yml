@@ -11,10 +11,14 @@ on:
 jobs:
   test:
     name: Ruby ${{ matrix.ruby }}, ActiveRecord ${{ matrix.activerecord }}, ${{ matrix.database }}
+    continue-on-error: ${{ matrix.ruby == 'head' }}
     strategy:
       fail-fast: false
       matrix:
         include:
+          - ruby: "head"
+            activerecord: "head"
+            database: sqlite
           - ruby: "3.2"
             activerecord: "7.0"
             database: postgresql
@@ -60,7 +64,7 @@ jobs:
 
     env:
       CI: true
-      ACTIVERECORD_VERSION: "~> ${{ matrix.activerecord }}"
+      ACTIVERECORD_VERSION: "${{ matrix.activerecord }}"
       DB: "${{ matrix.database }}"
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
