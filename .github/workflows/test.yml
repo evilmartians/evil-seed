@@ -19,12 +19,15 @@ jobs:
           - ruby: "head"
             activerecord: "head"
             database: sqlite
-          - ruby: "3.2"
-            activerecord: "7.0"
+          - ruby: "3.3"
+            activerecord: "7.1"
             database: postgresql
-          - ruby: "3.2"
-            activerecord: "7.0"
+          - ruby: "3.3"
+            activerecord: "7.1"
             database: mysql
+          - ruby: "3.3"
+            activerecord: "7.1"
+            database: sqlite
           - ruby: "3.2"
             activerecord: "7.0"
             database: sqlite
@@ -34,15 +37,12 @@ jobs:
           - ruby: "3.0"
             activerecord: "6.0"
             database: sqlite
-          - ruby: "2.7"
-            activerecord: "5.2"
-            database: sqlite
 
     runs-on: ubuntu-latest
 
     services:
       postgres:
-        image: postgres:15
+        image: postgres:16
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
@@ -54,7 +54,7 @@ jobs:
           --health-timeout 5s
           --health-retries 5
       mysql:
-        image: mysql:8.0
+        image: mysql:8.4
         env:
           MYSQL_ALLOW_EMPTY_PASSWORD: yes
           MYSQL_DATABASE: evil_seed_test
@@ -70,7 +70,7 @@ jobs:
       POSTGRES_PASSWORD: postgres
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: ruby/setup-ruby@v1
         with:
           ruby-version: ${{ matrix.ruby }}
