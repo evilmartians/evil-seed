@@ -55,7 +55,7 @@ def create_schema!
 
     create_table :roles do |t|
       t.string :name
-      t.string :permissions, array: true
+      t.string :permissions, **(ENV["DB"] == "postgresql" ? { array: true } : {})
     end
 
     create_table :user_roles, id: false do |t|

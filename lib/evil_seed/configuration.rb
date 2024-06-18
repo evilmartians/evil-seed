@@ -7,7 +7,7 @@ require_relative 'anonymizer'
 module EvilSeed
   # This module holds configuration for creating dump: which models and their constraints
   class Configuration
-    attr_accessor :record_dumper_class, :verbose, :verbose_sql, :unscoped, :dont_nullify, :skip_columns
+    attr_accessor :record_dumper_class, :verbose, :verbose_sql, :unscoped, :dont_nullify
 
     def initialize
       @record_dumper_class = RecordDumper
@@ -15,7 +15,7 @@ module EvilSeed
       @verbose_sql = false
       @unscoped = true
       @dont_nullify = false
-      @skip_columns = {}
+      @ignored_columns = Hash.new { |h, k| h[k] = [] }
     end
 
     def roots
@@ -38,14 +38,18 @@ module EvilSeed
       customizers[model_class.to_s] << Anonymizer.new(model_class, &block)
     end
 
+    def ignore_columns(model_class, *columns)
+      @ignored_columns[model_class] += columns
+    end
+
     # Customizer objects for every model
     # @return [Hash{String => Array<#call>}]
     def customizers
       @customizers ||= Hash.new { |h, k| h[k] = [] }
     end
 
-    def add_skip_columns(table_name, column_names)
-      @skip_columns[table_name] = column_names
+    def ignored_columns_for(model_class)
+      @ignored_columns[model_class]
     end
   end
 end

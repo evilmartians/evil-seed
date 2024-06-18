@@ -12,7 +12,7 @@ roles = Role.create!(
   ],
 )
 
-User.create!(
+users = User.create!(
   [
     { login: 'johndoe', email: 'johndoe@example.com', password: 'realhash', forum: forums[0], roles: [roles.second] },
     { login: 'janedoe', email: 'janedoe@example.net', password: 'realhash', forum: forums[1], roles: [roles.first]  },
@@ -47,3 +47,9 @@ answer.votes.create!(user: User.find_by!(login: 'eva'))
 
 question_attrs = %w[first second third fourth fifth].map { |name| { name: name, forum: forums.first } }
 Question.create!(question_attrs)
+
+Profile.create!([
+  { user: users[0], name: "Profile for user 0", title: "Title for user 0" },
+  { user: users[1], name: "Profile for user 1", title: "Title for user 1" },
+  { user: users[2], name: "Profile for user 2", title: "Title for user 2" },
+])

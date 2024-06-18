@@ -12,11 +12,18 @@ sqlite:
 postgresql:
   <<: *common
   adapter: postgresql
-  username: <%= ENV['ES_PG_USER'] || 'postgres' %>
+  <% if ENV.fetch("GITHUB_ACTIONS", false) %>
+  host: localhost
+  username: <%= ENV.fetch("POSTGRES_USER") %>
+  password: <%= ENV.fetch("POSTGRES_PASSWORD") %>
+  <% end %>
 
 mysql:
   <<: *common
   adapter: mysql2
-  username: <%= ENV['ES_PG_USER'] || 'root' %>
+  username: <%= ENV['MYSQL_USER'] || 'root' %>
+  <% if ENV.fetch("GITHUB_ACTIONS", false) %>
+  host: 127.0.0.1
+  <% end %>
   flags:
     - MULTI_STATEMENTS

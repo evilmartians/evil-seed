@@ -83,11 +83,19 @@ EvilSeed.configure do |config|
 
   # Anonymization is a handy DSL for transformations allowing you to transform model attributes in declarative fashion
   # Please note that model setters will NOT be called: results of the blocks will be assigned to
-  config.anonymize("User")
+  config.anonymize("User") do
     name  { Faker::Name.name }
     email { Faker::Internet.email }
     login { |login| "#{login}-test" }
   end
+
+  # You can ignore columns for any model. This is specially useful when working
+  # with encrypted columns.
+  #
+  # This will remove the columns even if the model is not a root node and is
+  # dumped via an association.
+  config.ignore_columns("Profile", :name)
+end
 ```
 
 ### Creating dump
