@@ -40,6 +40,7 @@ def create_schema!
       t.boolean    :best, default: false
       t.text       :text
       t.references :author
+      t.datetime   :deleted_at
       t.timestamps null: false
     end
     add_foreign_key :answers, :users, column: :author_id, on_delete: :nullify

@@ -65,11 +65,17 @@ module EvilSeed
 
     def write!(attributes)
       # Remove non-insertable columns from attributes
-      attributes = attributes.slice(*insertable_column_names)
+      attributes = prepare(attributes.slice(*insertable_column_names))
+
+      if configuration.verbose_sql
+        puts("-- #{relation_dumper.association_path}\n")
+        puts(@tuples_written.zero? ? insert_statement : ",\n")
+        puts("  (#{attributes.join(', ')})")
+      end
 
       @output.write("-- #{relation_dumper.association_path}\n") && @header_written = true unless @header_written
       @output.write(@tuples_written.zero? ? insert_statement : ",\n")
-      @output.write("  (#{prepare(attributes).join(', ')})")
+      @output.write("  (#{attributes.join(', ')})")
       @tuples_written += 1
       @output.write(";\n") && @tuples_written = 0 if @tuples_written == MAX_TUPLES_PER_INSERT_STMT
     end
@@ -84,7 +90,7 @@ module EvilSeed
       attributes.map do |key, value|
         type = model_class.attribute_types[key]
         model_class.connection.quote(type.serialize(value))
-      end
+      end.flatten.compact
     end
   end
 end

@@ -49,6 +49,8 @@ class Answer < ActiveRecord::Base
   has_many :votes, as: :votable
 
   has_many :voters, through: :votes, source: :user
+
+  default_scope { where(deleted_at: nil) }
 end
 
 class TrackingPixel < ActiveRecord::Base

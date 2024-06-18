@@ -52,7 +52,10 @@ EvilSeed.configure do |config|
     #
     # Association path is a dot-delimited string of association chain starting from model itself:
     # example: "forum.users.questions"
-    root.exclude(/\btracking_pixels\b/, 'forum.popular_questions')
+    root.exclude(/\btracking_pixels\b/, 'forum.popular_questions', /\Aforum\.parent\b/)
+
+    # Include back only certain associations
+    root.include(/\Aforum(\.parent(\.questions(\.answers)?)?)?\z/)
 
     # It's possible to limit the number of included into dump has_many and has_one records for every association
     # Note that belongs_to records for all not excluded associations are always dumped to keep referential integrity.
@@ -60,6 +63,11 @@ EvilSeed.configure do |config|
 
     # Or for certain association only
     root.limit_associations_size(10, 'forum.questions')
+
+    # Limit the depth of associations to be dumped from the root level
+    # All traverses through has_many, belongs_to, etc are counted
+    # So forum.subforums.subforums.questions.answers will be 5 levels deep
+    root.limit_deep(10)
   end
 
   # Everything you can pass to +where+ method will work as constraints:
@@ -95,6 +103,20 @@ EvilSeed.configure do |config|
   # This will remove the columns even if the model is not a root node and is
   # dumped via an association.
   config.ignore_columns("Profile", :name)
+
+  # Disable foreign key nullification for records that are not included in the dump
+  # By default, EvilSeed will nullify foreign keys for records that are not included in the dump
+  config.dont_nullify = true
+
+  # Unscope relations to include soft-deleted records etc
+  # This is useful when you want to include all records, including those that are hidden by default
+  # By default, EvilSeed will abide default scope of models
+  config.unscoped = true
+
+  # Verbose mode will print out the progress of the dump to the console along with writing the file
+  # By default, verbose mode is off
+  config.verbose = true
+  config.verbose_sql = true
 end
 ```
 

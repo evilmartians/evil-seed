@@ -5,7 +5,7 @@ require_relative 'relation_dumper'
 module EvilSeed
   # This module collects dumps generation for root and all it's dependencies
   class RootDumper
-    attr_reader :root, :dumper, :model_class, :total_limit, :association_limits
+    attr_reader :root, :dumper, :model_class, :total_limit, :deep_limit, :dont_nullify, :association_limits
 
     delegate :loaded_map, :configuration, to: :dumper
 
@@ -14,6 +14,8 @@ module EvilSeed
       @dumper = dumper
       @to_load_map = {}
       @total_limit = root.total_limit
+      @deep_limit = root.deep_limit
+      @dont_nullify = root.dont_nullify
       @association_limits = root.association_limits.dup
 
       @model_class = root.model.constantize
@@ -24,6 +26,7 @@ module EvilSeed
     def call
       association_path = model_class.model_name.singular
       relation = model_class.all
+      relation = relation.unscoped if configuration.unscoped
       relation = relation.where(*root.constraints) if root.constraints.any? # without arguments returns not a relation
       RelationDumper.new(relation, self, association_path).call
     end
