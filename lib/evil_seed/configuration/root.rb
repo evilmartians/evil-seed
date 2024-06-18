@@ -26,7 +26,7 @@ module EvilSeed
         @exclusions += association_patterns
       end
 
-      # Exclude some of associations from the dump
+      # Include some excluded associations back to the dump
       # @param association_patterns Array<String, Regex> Patterns to exclude associated models from dump
       def include(*association_patterns)
         @inclusions += association_patterns

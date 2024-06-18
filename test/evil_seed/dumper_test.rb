@@ -42,6 +42,7 @@ module EvilSeed
       assert_match(/'fourth'/, result)
       assert_match(/'fifth'/, result)
       assert result.index(/'One'/) < result.index(/'Descendant forum'/)
+      refute_match(/'Oops, I was wrong'/, result)
     end
 
     def test_limits_being_applied
@@ -58,6 +59,23 @@ module EvilSeed
       File.write(File.join('tmp', "#{__method__}.sql"), result)
       assert_match(/'fourth'/, result)
       refute_match(/'fifth'/, result)
+    end
+
+    def test_it_applies_unscoping_and_inclusions
+      configuration = EvilSeed::Configuration.new
+      configuration.root('Forum', name: 'Descendant forum') do |root|
+        root.include(/forum(\.parent(\.questions(\.answers)?)?)?\z/)
+        root.exclude(/.\..+/)
+      end
+      configuration.unscoped = true
+
+      io = StringIO.new
+      EvilSeed::Dumper.new(configuration).call(io)
+      result = io.string
+      File.write(File.join('tmp', "#{__method__}.sql"), result)
+      assert io.closed?
+      assert_match(/'Descendant forum'/, result)
+      assert_match(/'Oops, I was wrong'/, result)
     end
   end
 end

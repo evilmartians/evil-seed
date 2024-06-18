@@ -13,7 +13,7 @@ module EvilSeed
       @record_dumper_class = RecordDumper
       @verbose = false
       @verbose_sql = false
-      @unscoped = true
+      @unscoped = false
       @dont_nullify = false
       @ignored_columns = Hash.new { |h, k| h[k] = [] }
     end

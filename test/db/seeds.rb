@@ -43,6 +43,12 @@ answer = question.answers.create!(
   author: User.find_by!(login: 'bob'),
 )
 
+answer = question.answers.create!(
+  text:   'Oops, I was wrong',
+  author: User.find_by!(login: 'eva'),
+  deleted_at: Time.current,
+)
+
 answer.votes.create!(user: User.find_by!(login: 'eva'))
 
 question_attrs = %w[first second third fourth fifth].map { |name| { name: name, forum: forums.first } }
