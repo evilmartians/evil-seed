@@ -17,6 +17,7 @@ class EvilSeedTest < Minitest::Test
       config.root('Role') do |root|
         root.exclude(/\Arole\.(?!roles_users\z)/) # Take only join table and nothing more
       end
+      config.root('Version')
 
       config.ignore_columns("Profile", :name)
     end

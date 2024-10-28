@@ -64,5 +64,7 @@ def create_schema!
       t.references :role, foreign_key: { on_delete: :cascade }
       t.index %i[user_id role_id], unique: true
     end
+
+    create_table :versions
   end
 end
