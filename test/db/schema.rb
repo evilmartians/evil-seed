@@ -22,6 +22,7 @@ def create_schema!
     create_table :profiles do |t|
       t.references :user, foreign_key: { on_delete: :cascade }
       t.string     :name
+      t.boolean    :default, default: false
       t.string     :title
     end
 

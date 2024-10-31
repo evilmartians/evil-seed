@@ -1,7 +1,8 @@
 # frozen_string_literal: true
 
 class User < ActiveRecord::Base
-  has_one :profile
+  has_many :profiles
+  has_one :default_profile, -> { where(default: true) }, class_name: 'Profile'
   belongs_to :forum
 
   has_many :questions, foreign_key: :author_id

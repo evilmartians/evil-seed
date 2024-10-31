@@ -172,7 +172,8 @@ module EvilSeed
       model_class.reflect_on_all_associations(:belongs_to).reject do |reflection|
         next false if reflection.options[:polymorphic] # TODO: Add support for polymorphic belongs_to
         included = root.included?("#{association_path}.#{reflection.name}")
-        excluded = root.excluded?("#{association_path}.#{reflection.name}") || reflection.name == inverse_reflection
+        excluded = root.excluded?("#{association_path}.#{reflection.name}")
+        inverse = reflection.name == inverse_reflection
         if excluded and not included
           if model_class.column_names.include?(reflection.foreign_key)
             puts(" -- excluded #{reflection.foreign_key}") if verbose
@@ -182,7 +183,7 @@ module EvilSeed
           foreign_keys[reflection.name] = reflection.foreign_key
           table_names[reflection.name]  = reflection.table_name
         end
-        excluded and not included
+        excluded and not included or inverse
       end
     end
 

@@ -55,7 +55,8 @@ question_attrs = %w[first second third fourth fifth].map { |name| { name: name, 
 Question.create!(question_attrs)
 
 Profile.create!([
-  { user: users[0], name: "Profile for user 0", title: "Title for user 0" },
-  { user: users[1], name: "Profile for user 1", title: "Title for user 1" },
-  { user: users[2], name: "Profile for user 2", title: "Title for user 2" },
+  { user: users[0], default: true,  name: "Default profile for user 0", title: "Default title for user 0" },
+  { user: users[0], default: false, name: "Profile for user 0", title: "Title for user 0" },
+  { user: users[1], default: true,  name: "Profile for user 1", title: "Title for user 1" },
+  { user: users[2], default: true,  name: "Profile for user 2", title: "Title for user 2" },
 ])
