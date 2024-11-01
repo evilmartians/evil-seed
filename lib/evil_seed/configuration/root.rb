@@ -54,11 +54,11 @@ module EvilSeed
       end
 
       def excluded?(association_path)
-        exclusions.any? { |exclusion| association_path.match(exclusion) } #.match(association_path) }
+        exclusions.find { |exclusion| association_path.match(exclusion) } #.match(association_path) }
       end
 
       def included?(association_path)
-        inclusions.any? { |inclusion| association_path.match(inclusion) } #.match(association_path) }
+        inclusions.find { |inclusion| association_path.match(inclusion) } #.match(association_path) }
       end
     end
   end

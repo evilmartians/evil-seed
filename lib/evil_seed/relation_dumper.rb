@@ -31,6 +31,8 @@ module EvilSeed
     delegate :root, :configuration, :dont_nullify, :total_limit, :deep_limit, :loaded_map, to: :root_dumper
 
     def initialize(relation, root_dumper, association_path, **options)
+      puts("- #{association_path}") if root_dumper.configuration.verbose
+
       @relation               = relation
       @root_dumper            = root_dumper
       @verbose                = configuration.verbose
@@ -50,8 +52,6 @@ module EvilSeed
       @options                = options
       @current_deep           = association_path.split('.').size
       @dont_nullify           = dont_nullify
-
-      puts("- #{association_path}") if verbose
     end
 
     # Generate dump and write it into +io+
@@ -174,6 +174,7 @@ module EvilSeed
         included = root.included?("#{association_path}.#{reflection.name}")
         excluded = root.excluded?("#{association_path}.#{reflection.name}")
         inverse = reflection.name == inverse_reflection
+        puts " -- belongs_to #{reflection.name} #{"excluded by #{excluded}" if excluded} #{"re-included by #{included}" if included}" if verbose
         if excluded and not included
           if model_class.column_names.include?(reflection.foreign_key)
             puts(" -- excluded #{reflection.foreign_key}") if verbose
@@ -191,13 +192,17 @@ module EvilSeed
     def setup_has_many_reflections
       puts(" -- reflections #{model_class._reflections.keys}") if verbose
       model_class._reflections.select do |_reflection_name, reflection|
+        next false unless %i[has_one has_many].include?(reflection.macro)
+
         next false if model_class.primary_key.nil?
 
         next false if reflection.is_a?(ActiveRecord::Reflection::ThroughReflection)
 
         included = root.included?("#{association_path}.#{reflection.name}")
-        excluded = root.excluded?("#{association_path}.#{reflection.name}") || reflection.name == inverse_reflection
-        %i[has_one has_many].include?(reflection.macro) && !(excluded and not included)
+        excluded = :inverse if reflection.name == inverse_reflection
+        excluded ||= root.excluded?("#{association_path}.#{reflection.name}")
+        puts " -- #{reflection.macro} #{reflection.name} #{"excluded by #{excluded}" if excluded} #{"re-included by #{included}" if included}" if verbose
+        !(excluded and not included)
       end.map(&:second)
     end
   end
