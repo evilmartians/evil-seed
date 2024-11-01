@@ -32,6 +32,14 @@ module EvilSeed
         @inclusions += association_patterns
       end
 
+      def exclude_has_relations
+        @excluded_has_relations = :exclude_has_relations
+      end
+
+      def exclude_optional_belongs_to
+        @excluded_optional_belongs_to = :exclude_optional_belongs_to
+      end
+
       # Limit number of records in all (if pattern is not provided) or given  associations to include into dump
       # @param limit               [Integer]       Maximum number of records in associations to include into dump
       # @param association_pattern [String, Regex] Pattern to limit number of records for certain associated models
@@ -59,6 +67,14 @@ module EvilSeed
 
       def included?(association_path)
         inclusions.find { |inclusion| association_path.match(inclusion) } #.match(association_path) }
+      end
+
+      def excluded_has_relations?
+        @excluded_has_relations
+      end
+
+      def excluded_optional_belongs_to?
+        @excluded_optional_belongs_to
       end
     end
   end

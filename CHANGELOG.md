@@ -9,6 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+ - Options to exclude all `has_many` and `has_one` or optional `belongs_to` associations by default. [@Envek]
+
+   ```ruby
+   root.exclude_has_relations
+   root.exclude_optional_belongs_to
+   ```
+
+   Excluded associations can be re-included by `include` with matching pattern.
+
  - Print reason of association exclusion or inclusion in verbose mode. [@Envek]
 
 ### Fixed
