@@ -18,6 +18,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
    Excluded associations can be re-included by `include` with matching pattern.
 
+ - Exclusion and inclusion patterns can be specified as hashes and/or arrays. [@Envek]
+
+   ```ruby
+   config.root('Forum', featured: true) do |forum|
+     forum.include(parent: {questions: %i[answers votes]})
+   end
+   ```
+
+   Which is equivalent to:
+
+   ```ruby
+   config.root('Forum', featured: true) do |forum|
+     forum.include(/\Aforum(\.parent(\.questions(\.answers))?)?)?\z/)
+     forum.include(/\Aforum(\.parent(\.questions(\.votes))?)?)?\z/)
+   end
+   ```
+
  - Print reason of association exclusion or inclusion in verbose mode. [@Envek]
 
 ### Fixed

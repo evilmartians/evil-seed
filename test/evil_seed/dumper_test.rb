@@ -64,7 +64,7 @@ module EvilSeed
     def test_it_applies_unscoping_and_inclusions
       configuration = EvilSeed::Configuration.new
       configuration.root('Forum', name: 'Descendant forum') do |root|
-        root.include(/forum(\.parent(\.questions(\.answers)?)?)?\z/)
+        root.include(parent: {questions: :answers})
         root.exclude(/.\..+/)
       end
       configuration.unscoped = true

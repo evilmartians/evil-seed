@@ -54,8 +54,10 @@ EvilSeed.configure do |config|
     # example: "forum.users.questions"
     root.exclude(/\btracking_pixels\b/, 'forum.popular_questions', /\Aforum\.parent\b/)
 
-    # Include back only certain associations
-    root.include(/\Aforum(\.parent(\.questions(\.answers)?)?)?\z/)
+    # Include back only certain association chains
+    root.include(parent: {questions: %i[answers votes]})
+    # which is the same as
+    root.include(/\Aforum(\.parent(\.questions(\.(answers|votes))?)?)?\z/)
 
     # It's possible to limit the number of included into dump has_many and has_one records for every association
     # Note that belongs_to records for all not excluded associations are always dumped to keep referential integrity.

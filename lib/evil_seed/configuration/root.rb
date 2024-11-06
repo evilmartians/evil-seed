@@ -23,13 +23,29 @@ module EvilSeed
       # Exclude some of associations from the dump
       # @param association_patterns Array<String, Regex> Patterns to exclude associated models from dump
       def exclude(*association_patterns)
-        @exclusions += association_patterns
+        association_patterns.each do |pattern|
+          case pattern
+          when String, Regexp
+            @exclusions << pattern
+          else
+            path_prefix = model.constantize.model_name.singular
+            @inclusions += compile_patterns(pattern, prefix: path_prefix).map { |p| Regexp.new(/\A#{p}\z/) }
+          end
+        end
       end
 
       # Include some excluded associations back to the dump
       # @param association_patterns Array<String, Regex> Patterns to exclude associated models from dump
       def include(*association_patterns)
-        @inclusions += association_patterns
+        association_patterns.each do |pattern|
+          case pattern
+          when String, Regexp
+            @inclusions << pattern
+          else
+            path_prefix = model.constantize.model_name.singular
+            @inclusions += compile_patterns(pattern, prefix: path_prefix).map { |p| Regexp.new(/\A#{p}\z/) }
+          end
+        end
       end
 
       def exclude_has_relations
@@ -75,6 +91,35 @@ module EvilSeed
 
       def excluded_optional_belongs_to?
         @excluded_optional_belongs_to
+      end
+
+      private
+
+      def compile_patterns(pattern, prefix: "")
+        case pattern
+        when String, Symbol
+          ["#{prefix}(?:\\.#{pattern.to_s})?"]
+        when Regexp
+          ["#{prefix}(?:\\.(?:#{pattern.source}))?"]
+        when Array
+          pattern.map { |p| compile_patterns(p, prefix: prefix) }.flatten
+        when Hash
+          pattern.map do |k, v|
+            next nil unless v
+            subpatterns = compile_patterns(v)
+            next "#{prefix}(?:\\.#{k})?" if subpatterns.empty?
+
+            subpatterns.map do |p|
+              "#{prefix}(?:\\.#{k}#{p})?"
+            end
+          end.compact.flatten
+        when false, nil
+          nil
+        when true
+          [prefix]
+        else
+          raise ArgumentError, "Unknown pattern type: #{pattern.class} for #{pattern.inspect}"
+        end
       end
     end
   end
