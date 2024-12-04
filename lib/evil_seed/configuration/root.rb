@@ -29,7 +29,7 @@ module EvilSeed
             @exclusions << pattern
           else
             path_prefix = model.constantize.model_name.singular
-            @inclusions += compile_patterns(pattern, prefix: path_prefix).map { |p| Regexp.new(/\A#{p}\z/) }
+            @exclusions += compile_patterns(pattern, prefix: path_prefix).map { |p| Regexp.new(/\A#{p}\z/) }
           end
         end
       end
