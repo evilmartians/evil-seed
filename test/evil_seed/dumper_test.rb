@@ -11,6 +11,7 @@ module EvilSeed
         root.exclude('forum.users')
         root.exclude(/parent\.users/)
         root.exclude(/role\..+/)
+        root.exclude(/\.reactions\b/)
       end
       configuration.customize('User') do |attributes|
         attributes['password'] = '12345678'
@@ -76,6 +77,25 @@ module EvilSeed
       assert io.closed?
       assert_match(/'Descendant forum'/, result)
       assert_match(/'Oops, I was wrong'/, result)
+    end
+
+    def test_it_applies_custom_scopes
+      configuration = EvilSeed::Configuration.new
+      configuration.root('Forum', name: 'Descendant forum') do |root|
+        root.include(parent: {questions: :answers })
+        root.include("forum.parent.questions.answers.reactions") do
+          order(created_at: :desc).limit(2)
+        end
+        root.exclude(/.\..+/)
+      end
+
+      io = StringIO.new
+      EvilSeed::Dumper.new(configuration).call(io)
+      result = io.string
+      File.write(File.join('tmp', "#{__method__}.sql"), result)
+      assert io.closed?
+      assert_match("':+1:'", result)
+      assert_equal(2, result.scan("':+1:'").size)
     end
   end
 end

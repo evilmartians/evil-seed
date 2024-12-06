@@ -32,11 +32,15 @@ question = forums.first.questions.create!(
 
 question.votes.create!(user: User.find_by!(login: 'alice'))
 
-question.answers.create!(
+answer = question.answers.create!(
   text:   'Oh please go on hack it, ROFL)))',
   best:   true,
   author: User.find_by!(login: 'alice'),
 )
+
+answer.reactions.create!(users.map.with_index do |user, i|
+  { user: user, reaction: ':+1:', created_at: Time.current - 1.hour + i.minutes }
+end)
 
 answer = question.answers.create!(
   text:   'Please, stop',

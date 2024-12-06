@@ -37,6 +37,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
  - Print reason of association exclusion or inclusion in verbose mode. [@Envek]
 
+ - Allow to apply custom scoping to included associations. [@Envek]
+
+   ```ruby
+   config.root('Forum', featured: true) do |forum|
+     forum.include('questions.answers') do
+       order(created_at: :desc)
+     end
+   end
+   ```
+
 ### Fixed
 
  - Bug with null foreign key to back to auxiliary `has_one` association with not matching names. E.g. user has many profiles and has one default profile, profile belongs to user.

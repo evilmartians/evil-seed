@@ -55,6 +55,13 @@ def create_schema!
       t.references :user, foreign_key: { on_delete: :nullify }
     end
 
+    create_table :reactions do |t|
+      t.references :reactable, polymorphic: true
+      t.references :user, foreign_key: { on_delete: :nullify }
+      t.string :reaction
+      t.timestamps null: false
+    end
+
     create_table :roles do |t|
       t.string :name
       t.string :permissions, **(ENV["DB"] == "postgresql" ? { array: true } : {})

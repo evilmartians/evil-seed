@@ -8,6 +8,7 @@ class User < ActiveRecord::Base
   has_many :questions, foreign_key: :author_id
   has_many :answers,   foreign_key: :author_id
   has_many :votes
+  has_many :reactions
 
   has_and_belongs_to_many :roles, join_table: :user_roles
 end
@@ -38,6 +39,7 @@ class Question < ActiveRecord::Base
 
   has_many :answers
   has_many :votes, as: :votable
+  has_many :reactions, as: :reactable
 
   has_many :voters, through: :votes, source: :user
 
@@ -48,6 +50,7 @@ class Answer < ActiveRecord::Base
   belongs_to :author, class_name: 'User'
 
   has_many :votes, as: :votable
+  has_many :reactions, as: :reactable
 
   has_many :voters, through: :votes, source: :user
 
@@ -59,6 +62,11 @@ class TrackingPixel < ActiveRecord::Base
 end
 
 class Vote < ActiveRecord::Base
+  belongs_to :votable, polymorphic: true
+  belongs_to :user
+end
+
+class Reaction < ActiveRecord::Base
   belongs_to :votable, polymorphic: true
   belongs_to :user
 end

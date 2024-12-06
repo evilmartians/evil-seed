@@ -4,7 +4,7 @@ module EvilSeed
   class Configuration
     # Configuration for dumping some root model and its associations
     class Root
-      attr_reader :model, :constraints
+      attr_reader :model, :constraints, :limit, :order
       attr_reader :total_limit, :association_limits, :deep_limit, :dont_nullify
       attr_reader :exclusions, :inclusions
 
@@ -14,7 +14,7 @@ module EvilSeed
         @model = model
         @constraints = constraints
         @exclusions = []
-        @inclusions = []
+        @inclusions = {}
         @association_limits = {}
         @deep_limit = nil
         @dont_nullify = dont_nullify
@@ -36,14 +36,16 @@ module EvilSeed
 
       # Include some excluded associations back to the dump
       # @param association_patterns Array<String, Regex> Patterns to exclude associated models from dump
-      def include(*association_patterns)
+      def include(*association_patterns, &block)
         association_patterns.each do |pattern|
           case pattern
           when String, Regexp
-            @inclusions << pattern
+            @inclusions[pattern] = block
           else
             path_prefix = model.constantize.model_name.singular
-            @inclusions += compile_patterns(pattern, prefix: path_prefix).map { |p| Regexp.new(/\A#{p}\z/) }
+            compile_patterns(pattern, prefix: path_prefix).map do |p|
+              @inclusions[Regexp.new(/\A#{p}\z/)] = block
+            end
           end
         end
       end
@@ -54,6 +56,18 @@ module EvilSeed
 
       def exclude_optional_belongs_to
         @excluded_optional_belongs_to = :exclude_optional_belongs_to
+      end
+
+      def limit(limit = nil)
+        return @limit if limit.nil?
+
+        @limit = limit
+      end
+
+      def order(order = nil)
+        return @order if order.nil?
+
+        @order = order
       end
 
       # Limit number of records in all (if pattern is not provided) or given  associations to include into dump
@@ -82,7 +96,7 @@ module EvilSeed
       end
 
       def included?(association_path)
-        inclusions.find { |inclusion| association_path.match(inclusion) } #.match(association_path) }
+        inclusions.find { |inclusion, _block| association_path.match(inclusion) }
       end
 
       def excluded_has_relations?

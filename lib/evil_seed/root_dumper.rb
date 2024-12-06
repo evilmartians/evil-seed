@@ -28,6 +28,8 @@ module EvilSeed
       relation = model_class.all
       relation = relation.unscoped if configuration.unscoped
       relation = relation.where(*root.constraints) if root.constraints.any? # without arguments returns not a relation
+      relation = relation.limit(root.limit) if root.limit
+      relation = relation.order(root.order) if root.order
       RelationDumper.new(relation, self, association_path).call
     end
 

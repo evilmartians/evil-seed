@@ -26,7 +26,7 @@ module EvilSeed
     attr_reader :relation, :root_dumper, :model_class, :association_path, :search_key, :identifiers, :nullify_columns,
                 :belongs_to_reflections, :has_many_reflections, :foreign_keys, :loaded_ids, :to_load_map,
                 :record_dumper, :inverse_reflection, :table_names, :options,
-                :current_deep, :verbose
+                :current_deep, :verbose, :custom_scope
 
     delegate :root, :configuration, :dont_nullify, :total_limit, :deep_limit, :loaded_map, to: :root_dumper
 
@@ -52,6 +52,7 @@ module EvilSeed
       @options                = options
       @current_deep           = association_path.split('.').size
       @dont_nullify           = dont_nullify
+      @custom_scope           = options[:custom_scope]
     end
 
     # Generate dump and write it into +io+
@@ -73,7 +74,15 @@ module EvilSeed
       original_ignored_columns = model_class.ignored_columns
       model_class.ignored_columns += Array(configuration.ignored_columns_for(model_class.sti_name))
       model_class.send(:reload_schema_from_cache) if ActiveRecord.version < Gem::Version.new("6.1.0.rc1") # See https://github.com/rails/rails/pull/37581
-      if identifiers.present?
+      if custom_scope
+        puts("  # #{search_key} (with scope)") if verbose
+        attrs = fetch_attributes(relation)
+        puts(" -- dumped #{attrs.size}") if verbose
+        attrs.each do |attributes|
+          next unless check_limits!
+          dump_record!(attributes)
+        end
+      elsif identifiers.present?
         puts("  # #{search_key} => #{identifiers}") if verbose
         # Don't use AR::Base#find_each as we will get error on Oracle if we will have more than 1000 ids in IN statement
         identifiers.in_groups_of(MAX_IDENTIFIERS_IN_IN_STMT).each do |ids|
@@ -129,16 +138,17 @@ module EvilSeed
     end
 
     def dump_has_many_associations!
-      has_many_reflections.map do |reflection|
+      has_many_reflections.map do |reflection, custom_scope|
         next if loaded_ids.empty? || total_limit.try(:zero?)
         RelationDumper.new(
-          build_relation(reflection),
+          build_relation(reflection, custom_scope),
           root_dumper,
           "#{association_path}.#{reflection.name}",
           search_key:       reflection.foreign_key,
           identifiers:      loaded_ids,
           inverse_of:       reflection.inverse_of.try(:name),
           limitable:        true,
+          custom_scope:     custom_scope,
         ).call
       end
     end
@@ -157,13 +167,14 @@ module EvilSeed
       root_dumper.check_limits!(association_path)
     end
 
-    def build_relation(reflection)
+    def build_relation(reflection, custom_scope = nil)
       if configuration.unscoped
         relation = reflection.klass.unscoped
       else
         relation = reflection.klass.all
       end
       relation = relation.instance_eval(&reflection.scope) if reflection.scope
+      relation = relation.instance_eval(&custom_scope) if custom_scope
       relation = relation.where(reflection.type => model_class.to_s) if reflection.options[:as] # polymorphic
       relation
     end
@@ -205,7 +216,9 @@ module EvilSeed
         excluded ||= root.excluded?("#{association_path}.#{reflection.name}")
         puts " -- #{reflection.macro} #{reflection.name} #{"excluded by #{excluded}" if excluded} #{"re-included by #{included}" if included}" if verbose
         !(excluded and not included)
-      end.map(&:second)
+      end.map do |_reflection_name, reflection|
+        [reflection, root.included?("#{association_path}.#{reflection.name}")&.last]
+      end
     end
   end
 end

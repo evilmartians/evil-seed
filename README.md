@@ -48,6 +48,11 @@ EvilSeed.configure do |config|
   # First, you should specify +root models+ and their +constraints+ to limit the number of dumped records:
   # This is like Forum.where(featured: true).all
   config.root('Forum', featured: true) do |root|
+    # You can limit number of records to be dumped
+    root.limit(100)
+    # Specify order for records to be selected for dump
+    root.order(created_at: :desc)
+
     # It's possible to remove some associations from dumping with pattern of association path to exclude
     #
     # Association path is a dot-delimited string of association chain starting from model itself:
@@ -58,6 +63,11 @@ EvilSeed.configure do |config|
     root.include(parent: {questions: %i[answers votes]})
     # which is the same as
     root.include(/\Aforum(\.parent(\.questions(\.(answers|votes))?)?)?\z/)
+
+    # You can also specify custom scoping for associations
+    root.include(questions: { answers: :reactions }) do
+      order(created_at: :desc) # Any ActiveRecord query method is allowed
+    end
 
     # It's possible to limit the number of included into dump has_many and has_one records for every association
     # Note that belongs_to records for all not excluded associations are always dumped to keep referential integrity.
