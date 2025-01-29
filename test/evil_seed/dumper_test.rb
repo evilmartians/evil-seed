@@ -83,7 +83,7 @@ module EvilSeed
       configuration = EvilSeed::Configuration.new
       configuration.root('Forum', name: 'Descendant forum') do |root|
         root.include(parent: {questions: :answers })
-        root.include("forum.parent.questions.answers.reactions") do
+        root.include(/\Aforum\.parent\.questions\.answers\.reactions\z/) do
           order(created_at: :desc).limit(2)
         end
         root.exclude(/.\..+/)
