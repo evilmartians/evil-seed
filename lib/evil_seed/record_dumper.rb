@@ -51,9 +51,10 @@ module EvilSeed
     end
 
     def insertable_column_names
-      model_class.columns_hash.reject do |k,v|
-        v.respond_to?(:virtual?) ? v.virtual? : false
-      end.keys
+      @insertable_column_names ||=
+        model_class.columns_hash.reject do |_k, v|
+          v.respond_to?(:virtual?) ? v.virtual? : false
+        end.keys - configuration.ignored_columns_for(model_class.to_s)
     end
 
     def insert_statement

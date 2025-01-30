@@ -39,7 +39,7 @@ module EvilSeed
     end
 
     def ignore_columns(model_class, *columns)
-      @ignored_columns[model_class] += columns
+      @ignored_columns[model_class.to_s] += columns.map(&:to_s)
     end
 
     # Customizer objects for every model

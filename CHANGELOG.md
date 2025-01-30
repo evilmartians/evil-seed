@@ -50,6 +50,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
  - Bug with null foreign key to back to auxiliary `has_one` association with not matching names. E.g. user has many profiles and has one default profile, profile belongs to user.
+ - Ignored columns handling.
 
 ## [0.6.0] - 2024-06-18
 
