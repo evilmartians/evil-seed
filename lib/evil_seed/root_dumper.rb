@@ -7,12 +7,11 @@ module EvilSeed
   class RootDumper
     attr_reader :root, :dumper, :model_class, :total_limit, :deep_limit, :dont_nullify, :association_limits
 
-    delegate :loaded_map, :configuration, to: :dumper
+    delegate :loaded_map, :to_load_map, :configuration, to: :dumper
 
     def initialize(root, dumper)
       @root   = root
       @dumper = dumper
-      @to_load_map = {}
       @total_limit = root.total_limit
       @deep_limit = root.deep_limit
       @dont_nullify = root.dont_nullify

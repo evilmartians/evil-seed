@@ -24,11 +24,11 @@ module EvilSeed
     MAX_IDENTIFIERS_IN_IN_STMT = 1_000
 
     attr_reader :relation, :root_dumper, :model_class, :association_path, :search_key, :identifiers, :nullify_columns,
-                :belongs_to_reflections, :has_many_reflections, :foreign_keys, :loaded_ids, :to_load_map,
-                :record_dumper, :inverse_reflection, :table_names, :options,
+                :belongs_to_reflections, :has_many_reflections, :foreign_keys, :loaded_ids, :local_load_map,
+                :records, :record_dumper, :inverse_reflection, :table_names, :options,
                 :current_deep, :verbose, :custom_scope
 
-    delegate :root, :configuration, :dont_nullify, :total_limit, :deep_limit, :loaded_map, to: :root_dumper
+    delegate :root, :configuration, :dont_nullify, :total_limit, :deep_limit, :loaded_map, :to_load_map, to: :root_dumper
 
     def initialize(relation, root_dumper, association_path, **options)
       puts("- #{association_path}") if root_dumper.configuration.verbose
@@ -37,13 +37,14 @@ module EvilSeed
       @root_dumper            = root_dumper
       @verbose                = configuration.verbose
       @identifiers            = options[:identifiers]
-      @to_load_map            = Hash.new { |h, k| h[k] = [] }
+      @local_load_map         = Hash.new { |h, k| h[k] = [] }
       @foreign_keys           = Hash.new { |h, k| h[k] = [] }
       @loaded_ids             = []
       @model_class            = relation.klass
       @search_key             = options[:search_key] || model_class.primary_key
       @association_path       = association_path
       @inverse_reflection     = options[:inverse_of]
+      @records                = []
       @record_dumper          = configuration.record_dumper_class.new(model_class, configuration, self)
       @nullify_columns        = []
       @table_names            = {}
@@ -60,11 +61,13 @@ module EvilSeed
     def call
       dump!
       if deep_limit and current_deep > deep_limit
-        [record_dumper.result].flatten.compact
+        [dump_records!].flatten.compact
       else
-        belongs_to_dumps = dump_belongs_to_associations!
-        has_many_dumps   = dump_has_many_associations!
-        [belongs_to_dumps, record_dumper.result, has_many_dumps].flatten.compact
+        [
+          dump_belongs_to_associations!,
+          dump_records!,
+          dump_has_many_associations!,
+        ].flatten.compact
       end
     end
 
@@ -114,24 +117,32 @@ module EvilSeed
           attributes[nullify_column] = nil
         end
       end
-      return unless record_dumper.call(attributes)
+      records << attributes
       foreign_keys.each do |reflection_name, fk_column|
         foreign_key = attributes[fk_column]
-        next if foreign_key.nil? || loaded_map[table_names[reflection_name]].include?(foreign_key)
-        to_load_map[reflection_name] << foreign_key
+        next if foreign_key.nil? || loaded_map[table_names[reflection_name]].include?(foreign_key) || to_load_map[table_names[reflection_name]].include?(foreign_key)
+        local_load_map[reflection_name] << foreign_key
+        to_load_map[table_names[reflection_name]] << foreign_key
       end
       loaded_ids << attributes[model_class.primary_key]
     end
 
+    def dump_records!
+      records.each do |attributes|
+        record_dumper.call(attributes)
+      end
+      record_dumper.result
+    end
+
     def dump_belongs_to_associations!
       belongs_to_reflections.map do |reflection|
-        next if to_load_map[reflection.name].empty?
+        next if local_load_map[reflection.name].empty?
         RelationDumper.new(
           build_relation(reflection),
           root_dumper,
           "#{association_path}.#{reflection.name}",
           search_key:       reflection.association_primary_key,
-          identifiers:      to_load_map[reflection.name],
+          identifiers:      local_load_map[reflection.name],
           limitable:        false,
         ).call
       end
@@ -145,7 +156,7 @@ module EvilSeed
           root_dumper,
           "#{association_path}.#{reflection.name}",
           search_key:       reflection.foreign_key,
-          identifiers:      loaded_ids,
+          identifiers:      loaded_ids - local_load_map[reflection.name],
           inverse_of:       reflection.inverse_of.try(:name),
           limitable:        true,
           custom_scope:     custom_scope,

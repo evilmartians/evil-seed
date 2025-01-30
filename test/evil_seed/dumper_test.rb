@@ -97,5 +97,28 @@ module EvilSeed
       assert_match("':+1:'", result)
       assert_equal(2, result.scan("':+1:'").size)
     end
+
+    def test_it_dumps_included_relations_for_already_loaded_records
+      configuration = EvilSeed::Configuration.new
+      configuration.root('Forum', name: 'One') do |forum|
+        forum.exclude_has_relations
+        forum.include(questions: :author) # but not answers
+      end
+      configuration.root('User', forum: Forum.where(name: 'One')) do |user|
+        user.exclude_has_relations
+        user.include(:profiles)
+      end
+
+      io = StringIO.new
+      EvilSeed::Dumper.new(configuration).call(io)
+      result = io.string
+      File.write(File.join('tmp', "#{__method__}.sql"), result)
+      assert io.closed?
+
+      # Expect all profiles of forum One users to be loaded
+      assert_match(/'Profile for user 0'/, result)
+      refute_match(/'Profile for user 1'/, result)
+      assert_match(/'Profile for user 2'/, result)
+    end
   end
 end

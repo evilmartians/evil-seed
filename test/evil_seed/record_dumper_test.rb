@@ -9,6 +9,10 @@ module EvilSeed
         @loaded_map ||= Hash.new { |h, k| h[k] = Set.new }
       end
 
+      def to_load_map
+        @loaded_map ||= Hash.new { |h, k| h[k] = Set.new }
+      end
+
       def association_path
         'does not matter anymore'
       end
@@ -36,10 +40,12 @@ module EvilSeed
     end
 
     def test_it_does_not_dump_already_dumped_records
+      @relation_dumper.loaded_map["users"] = Set.new([1])
       rd = RecordDumper.new(User, @configuration, @relation_dumper)
       rd.call('id' => 1, 'login' => 'randall',  'password' => 'correcthorsebatterystaple', 'email' => 'xkcd@xkcd.com')
-      rd.call('id' => 1, 'login' => 'randall',  'password' => 'correcthorsebatterystaple', 'email' => 'xkcd@xkcd.com')
-      assert_equal 1, rd.result.tap(&:rewind).read.scan('randall').size
+      assert_equal 0, rd.result.tap(&:rewind).read.scan('randall').size
+    ensure
+      @relation_dumper.loaded_map["users"] = Set.new
     end
 
     def test_it_applies_transformations

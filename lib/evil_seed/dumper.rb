@@ -7,7 +7,7 @@ module EvilSeed
   # This class initiates dump creation for every root model of configuration
   # and then concatenates dumps from all roots into one single IO.
   class Dumper
-    attr_reader :configuration, :loaded_map
+    attr_reader :configuration, :loaded_map, :to_load_map
 
     # @param configuration [Configuration]
     def initialize(configuration)
@@ -18,6 +18,7 @@ module EvilSeed
     # @param output [IO] Stream to write SQL dump into
     def call(output)
       @loaded_map = Hash.new { |h, k| h[k] = Set.new } # stores primary keys of already dumped records for every table
+      @to_load_map = Hash.new { |h, k| h[k] = Set.new } # stores primary keys of records we're going to dump to avoid cycles
       @output = output
       configuration.roots.each do |root|
         table_outputs = RootDumper.new(root, self).call
