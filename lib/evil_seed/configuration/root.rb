@@ -72,12 +72,20 @@ module EvilSeed
 
       # Limit number of records in all (if pattern is not provided) or given  associations to include into dump
       # @param limit               [Integer]       Maximum number of records in associations to include into dump
-      # @param association_pattern [String, Regex] Pattern to limit number of records for certain associated models
-      def limit_associations_size(limit, association_pattern = nil)
-        if association_pattern
-          @association_limits[association_pattern] = limit
-        else
-          @total_limit = limit
+      # @param association_pattern Array<String, Regex, Hash> Pattern to limit number of records for certain associated models
+      def limit_associations_size(limit, *association_patterns)
+        return @total_limit = limit if association_patterns.empty?
+
+        association_patterns.each do |pattern|
+          case pattern
+          when String, Regexp
+            @association_limits[pattern] = limit
+          else
+            path_prefix = model.constantize.model_name.singular
+            compile_patterns(pattern, prefix: path_prefix, partial: false).map do |p|
+              @association_limits[Regexp.new(/\A#{p}\z/)] = limit
+            end
+          end
         end
       end
 
@@ -109,22 +117,23 @@ module EvilSeed
 
       private
 
-      def compile_patterns(pattern, prefix: "")
+      def compile_patterns(pattern, prefix: "", partial: true)
+        wrap = -> (p) { partial ? "(?:\\.#{p})?" : "\\.#{p}" }
         case pattern
         when String, Symbol
-          ["#{prefix}(?:\\.#{pattern.to_s})?"]
+          ["#{prefix}#{wrap.(pattern.to_s)}"]
         when Regexp
-          ["#{prefix}(?:\\.(?:#{pattern.source}))?"]
+          ["#{prefix}#{wrap.("(?:#{pattern.source})")}"]
         when Array
-          pattern.map { |p| compile_patterns(p, prefix: prefix) }.flatten
+          pattern.map { |p| compile_patterns(p, prefix: prefix, partial: partial) }.flatten
         when Hash
           pattern.map do |k, v|
             next nil unless v
-            subpatterns = compile_patterns(v)
-            next "#{prefix}(?:\\.#{k})?" if subpatterns.empty?
+            subpatterns = compile_patterns(v, partial: partial)
+            next "#{prefix}#{wrap.(k)}" if subpatterns.empty?
 
             subpatterns.map do |p|
-              "#{prefix}(?:\\.#{k}#{p})?"
+              "#{prefix}#{wrap.("#{k}#{p}")}"
             end
           end.compact.flatten
         when false, nil

@@ -74,7 +74,11 @@ EvilSeed.configure do |config|
     root.limit_associations_size(100)
 
     # Or for certain association only
-    root.limit_associations_size(10, 'forum.questions')
+    root.limit_associations_size(5, 'forum.questions')
+    root.limit_associations_size(15, 'forum.questions.answers')
+    # or
+    root.limit_associations_size(5, :questions)
+    root.limit_associations_size(15, questions: :answers)
 
     # Limit the depth of associations to be dumped from the root level
     # All traverses through has_many, belongs_to, etc are counted

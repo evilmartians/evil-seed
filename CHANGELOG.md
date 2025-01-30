@@ -35,6 +35,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
    end
    ```
 
+ - Association limits also can be specified as hashes and/or arrays. [@Envek]
+
+    ```ruby
+   config.root('Forum', featured: true) do |forum|
+     forum.limit_associations_size(15, questions: %i[answers votes])
+   end
+   ```
+
+   Which is equivalent to:
+
+   ```ruby
+   config.root('Forum', featured: true) do |forum|
+     forum.limit_associations_size(15, 'forum.questions.answers')
+     forum.limit_associations_size(15, 'forum.questions.votes')
+   end
+   ```
+
+
  - Print reason of association exclusion or inclusion in verbose mode. [@Envek]
 
  - Allow to apply custom scoping to included associations. [@Envek]
