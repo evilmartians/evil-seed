@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require 'test_helper'
-
+require 'debug'
 class EvilSeedTest < Minitest::Test
   def setup
     EvilSeed.configure do |config|
