@@ -67,6 +67,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+ - Error when dumping single-column tables. [@lsantobuono]
  - Bug with null foreign key to back to auxiliary `has_one` association with not matching names. E.g. user has many profiles and has one default profile, profile belongs to user.
  - Ignored columns handling.
  - Dump relations for records that were dumped earlier with relations excluded.
@@ -136,3 +137,4 @@ Initial release. [@palkan], [@Envek]
 [@cmer]: https://github.com/cmer "Carl Mercier"
 [@nhocki]: https://github.com/nhocki "Nicolás Hock-Isaza"
 [@gazay]: https://github.com/gazay "Alex Gaziev"
+[@lsantobuono]: https://github.com/lsantobuono ""

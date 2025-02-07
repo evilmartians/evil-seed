@@ -64,3 +64,8 @@ Profile.create!([
   { user: users[1], default: true,  name: "Profile for user 1", title: "Title for user 1" },
   { user: users[2], default: true,  name: "Profile for user 2", title: "Title for user 2" },
 ])
+
+Version.create!([
+  { id: 1},
+  { id: 2},
+])

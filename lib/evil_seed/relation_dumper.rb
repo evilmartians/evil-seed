@@ -169,7 +169,7 @@ module EvilSeed
     # @return [Array<Hash{String => String, Integer, Float, Boolean, nil}>]
     def fetch_attributes(relation)
       relation.pluck(*model_class.column_names).map do |row|
-        Hash[model_class.column_names.zip(row)]
+        Hash[model_class.column_names.zip(Array(row))]
       end
     end
 
