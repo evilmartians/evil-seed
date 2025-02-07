@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.0] - 2025-02-07
+
 ### Added
 
  - Options to exclude all `has_many` and `has_one` or optional `belongs_to` associations by default. [@Envek]
