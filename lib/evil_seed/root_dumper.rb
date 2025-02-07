@@ -7,12 +7,11 @@ module EvilSeed
   class RootDumper
     attr_reader :root, :dumper, :model_class, :total_limit, :deep_limit, :dont_nullify, :association_limits
 
-    delegate :loaded_map, :configuration, to: :dumper
+    delegate :loaded_map, :to_load_map, :configuration, to: :dumper
 
     def initialize(root, dumper)
       @root   = root
       @dumper = dumper
-      @to_load_map = {}
       @total_limit = root.total_limit
       @deep_limit = root.deep_limit
       @dont_nullify = root.dont_nullify
@@ -28,6 +27,8 @@ module EvilSeed
       relation = model_class.all
       relation = relation.unscoped if configuration.unscoped
       relation = relation.where(*root.constraints) if root.constraints.any? # without arguments returns not a relation
+      relation = relation.limit(root.limit) if root.limit
+      relation = relation.order(root.order) if root.order
       RelationDumper.new(relation, self, association_path).call
     end
 

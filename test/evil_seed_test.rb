@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require 'test_helper'
-
+require 'debug'
 class EvilSeedTest < Minitest::Test
   def setup
     EvilSeed.configure do |config|
@@ -10,6 +10,8 @@ class EvilSeedTest < Minitest::Test
         root.exclude('forum.users')
         root.exclude(/parent\.users/)
         root.exclude(/role\..+/)
+        root.exclude(/\.profiles/)
+        root.exclude(/\.reactions\b/)
       end
       config.root('Question') do |root|
         root.exclude(/.*/)
@@ -62,6 +64,8 @@ class EvilSeedTest < Minitest::Test
       assert Role.find_by(name: 'Superadmin')
       assert Question.find_by(name: 'fourth')
       assert Question.find_by(name: 'fifth')
+      assert (Profile.count == 2) # Only default profiles for included users
+      assert_equal 1, User.find_by(login: 'johndoe').profiles.count
       assert Profile.where.not(name: nil).none?
     end
   end

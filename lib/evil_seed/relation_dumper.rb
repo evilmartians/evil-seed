@@ -24,24 +24,27 @@ module EvilSeed
     MAX_IDENTIFIERS_IN_IN_STMT = 1_000
 
     attr_reader :relation, :root_dumper, :model_class, :association_path, :search_key, :identifiers, :nullify_columns,
-                :belongs_to_reflections, :has_many_reflections, :foreign_keys, :loaded_ids, :to_load_map,
-                :record_dumper, :inverse_reflection, :table_names, :options,
-                :current_deep, :verbose
+                :belongs_to_reflections, :has_many_reflections, :foreign_keys, :loaded_ids, :local_load_map,
+                :records, :record_dumper, :inverse_reflection, :table_names, :options,
+                :current_deep, :verbose, :custom_scope
 
-    delegate :root, :configuration, :dont_nullify, :total_limit, :deep_limit, :loaded_map, to: :root_dumper
+    delegate :root, :configuration, :dont_nullify, :total_limit, :deep_limit, :loaded_map, :to_load_map, to: :root_dumper
 
     def initialize(relation, root_dumper, association_path, **options)
+      puts("- #{association_path}") if root_dumper.configuration.verbose
+
       @relation               = relation
       @root_dumper            = root_dumper
       @verbose                = configuration.verbose
       @identifiers            = options[:identifiers]
-      @to_load_map            = Hash.new { |h, k| h[k] = [] }
+      @local_load_map         = Hash.new { |h, k| h[k] = [] }
       @foreign_keys           = Hash.new { |h, k| h[k] = [] }
       @loaded_ids             = []
       @model_class            = relation.klass
       @search_key             = options[:search_key] || model_class.primary_key
       @association_path       = association_path
       @inverse_reflection     = options[:inverse_of]
+      @records                = []
       @record_dumper          = configuration.record_dumper_class.new(model_class, configuration, self)
       @nullify_columns        = []
       @table_names            = {}
@@ -50,8 +53,7 @@ module EvilSeed
       @options                = options
       @current_deep           = association_path.split('.').size
       @dont_nullify           = dont_nullify
-
-      puts("- #{association_path}") if verbose
+      @custom_scope           = options[:custom_scope]
     end
 
     # Generate dump and write it into +io+
@@ -59,11 +61,13 @@ module EvilSeed
     def call
       dump!
       if deep_limit and current_deep > deep_limit
-        [record_dumper.result].flatten.compact
+        [dump_records!].flatten.compact
       else
-        belongs_to_dumps = dump_belongs_to_associations!
-        has_many_dumps   = dump_has_many_associations!
-        [belongs_to_dumps, record_dumper.result, has_many_dumps].flatten.compact
+        [
+          dump_belongs_to_associations!,
+          dump_records!,
+          dump_has_many_associations!,
+        ].flatten.compact
       end
     end
 
@@ -73,7 +77,15 @@ module EvilSeed
       original_ignored_columns = model_class.ignored_columns
       model_class.ignored_columns += Array(configuration.ignored_columns_for(model_class.sti_name))
       model_class.send(:reload_schema_from_cache) if ActiveRecord.version < Gem::Version.new("6.1.0.rc1") # See https://github.com/rails/rails/pull/37581
-      if identifiers.present?
+      if custom_scope
+        puts("  # #{search_key} (with scope)") if verbose
+        attrs = fetch_attributes(relation)
+        puts(" -- dumped #{attrs.size}") if verbose
+        attrs.each do |attributes|
+          next unless check_limits!
+          dump_record!(attributes)
+        end
+      elsif identifiers.present?
         puts("  # #{search_key} => #{identifiers}") if verbose
         # Don't use AR::Base#find_each as we will get error on Oracle if we will have more than 1000 ids in IN statement
         identifiers.in_groups_of(MAX_IDENTIFIERS_IN_IN_STMT).each do |ids|
@@ -105,40 +117,49 @@ module EvilSeed
           attributes[nullify_column] = nil
         end
       end
-      return unless record_dumper.call(attributes)
+      records << attributes
       foreign_keys.each do |reflection_name, fk_column|
         foreign_key = attributes[fk_column]
-        next if foreign_key.nil? || loaded_map[table_names[reflection_name]].include?(foreign_key)
-        to_load_map[reflection_name] << foreign_key
+        next if foreign_key.nil? || loaded_map[table_names[reflection_name]].include?(foreign_key) || to_load_map[table_names[reflection_name]].include?(foreign_key)
+        local_load_map[reflection_name] << foreign_key
+        to_load_map[table_names[reflection_name]] << foreign_key
       end
       loaded_ids << attributes[model_class.primary_key]
     end
 
+    def dump_records!
+      records.each do |attributes|
+        record_dumper.call(attributes)
+      end
+      record_dumper.result
+    end
+
     def dump_belongs_to_associations!
       belongs_to_reflections.map do |reflection|
-        next if to_load_map[reflection.name].empty?
+        next if local_load_map[reflection.name].empty?
         RelationDumper.new(
           build_relation(reflection),
           root_dumper,
           "#{association_path}.#{reflection.name}",
           search_key:       reflection.association_primary_key,
-          identifiers:      to_load_map[reflection.name],
+          identifiers:      local_load_map[reflection.name],
           limitable:        false,
         ).call
       end
     end
 
     def dump_has_many_associations!
-      has_many_reflections.map do |reflection|
+      has_many_reflections.map do |reflection, custom_scope|
         next if loaded_ids.empty? || total_limit.try(:zero?)
         RelationDumper.new(
-          build_relation(reflection),
+          build_relation(reflection, custom_scope),
           root_dumper,
           "#{association_path}.#{reflection.name}",
           search_key:       reflection.foreign_key,
-          identifiers:      loaded_ids,
+          identifiers:      loaded_ids - local_load_map[reflection.name],
           inverse_of:       reflection.inverse_of.try(:name),
           limitable:        true,
+          custom_scope:     custom_scope,
         ).call
       end
     end
@@ -158,13 +179,14 @@ module EvilSeed
       root_dumper.check_limits!(association_path)
     end
 
-    def build_relation(reflection)
+    def build_relation(reflection, custom_scope = nil)
       if configuration.unscoped
         relation = reflection.klass.unscoped
       else
         relation = reflection.klass.all
       end
       relation = relation.instance_eval(&reflection.scope) if reflection.scope
+      relation = relation.instance_eval(&custom_scope) if custom_scope
       relation = relation.where(reflection.type => model_class.to_s) if reflection.options[:as] # polymorphic
       relation
     end
@@ -173,7 +195,10 @@ module EvilSeed
       model_class.reflect_on_all_associations(:belongs_to).reject do |reflection|
         next false if reflection.options[:polymorphic] # TODO: Add support for polymorphic belongs_to
         included = root.included?("#{association_path}.#{reflection.name}")
-        excluded = root.excluded?("#{association_path}.#{reflection.name}") || reflection.name == inverse_reflection
+        excluded = reflection.options[:optional] && root.excluded_optional_belongs_to?
+        excluded ||= root.excluded?("#{association_path}.#{reflection.name}")
+        inverse = reflection.name == inverse_reflection
+        puts " -- belongs_to #{reflection.name} #{"excluded by #{excluded}" if excluded} #{"re-included by #{included}" if included}" if verbose
         if excluded and not included
           if model_class.column_names.include?(reflection.foreign_key)
             puts(" -- excluded #{reflection.foreign_key}") if verbose
@@ -183,7 +208,7 @@ module EvilSeed
           foreign_keys[reflection.name] = reflection.foreign_key
           table_names[reflection.name]  = reflection.table_name
         end
-        excluded and not included
+        excluded and not included or inverse
       end
     end
 
@@ -191,14 +216,21 @@ module EvilSeed
     def setup_has_many_reflections
       puts(" -- reflections #{model_class._reflections.keys}") if verbose
       model_class._reflections.select do |_reflection_name, reflection|
+        next false unless %i[has_one has_many].include?(reflection.macro)
+
         next false if model_class.primary_key.nil?
 
         next false if reflection.is_a?(ActiveRecord::Reflection::ThroughReflection)
 
         included = root.included?("#{association_path}.#{reflection.name}")
-        excluded = root.excluded?("#{association_path}.#{reflection.name}") || reflection.name == inverse_reflection
-        %i[has_one has_many].include?(reflection.macro) && !(excluded and not included)
-      end.map(&:second)
+        excluded = :inverse if reflection.name == inverse_reflection
+        excluded ||= root.excluded_has_relations?
+        excluded ||= root.excluded?("#{association_path}.#{reflection.name}")
+        puts " -- #{reflection.macro} #{reflection.name} #{"excluded by #{excluded}" if excluded} #{"re-included by #{included}" if included}" if verbose
+        !(excluded and not included)
+      end.map do |_reflection_name, reflection|
+        [reflection, root.included?("#{association_path}.#{reflection.name}")&.last]
+      end
     end
   end
 end

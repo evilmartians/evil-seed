@@ -9,7 +9,7 @@ module EvilSeed
 
     attr_reader :model_class, :configuration, :relation_dumper
 
-    delegate :loaded_map, to: :relation_dumper
+    delegate :loaded_map, :to_load_map, to: :relation_dumper
 
     def initialize(model_class, configuration, relation_dumper)
       @model_class     = model_class
@@ -38,8 +38,10 @@ module EvilSeed
 
     def loaded!(attributes)
       id = model_class.primary_key && attributes[model_class.primary_key] || attributes
-      return false if loaded_map[model_class.table_name].include?(id)
-      loaded_map[model_class.table_name] << id
+      !loaded_map[model_class.table_name].include?(id).tap do
+        loaded_map[model_class.table_name] << id
+        to_load_map[model_class.table_name].delete(id)
+      end
     end
 
     def transform_and_anonymize(attributes)
@@ -51,9 +53,10 @@ module EvilSeed
     end
 
     def insertable_column_names
-      model_class.columns_hash.reject do |k,v|
-        v.respond_to?(:virtual?) ? v.virtual? : false
-      end.keys
+      @insertable_column_names ||=
+        model_class.columns_hash.reject do |_k, v|
+          v.respond_to?(:virtual?) ? v.virtual? : false
+        end.keys - configuration.ignored_columns_for(model_class.to_s)
     end
 
     def insert_statement
@@ -81,9 +84,11 @@ module EvilSeed
     end
 
     def finalize!
-      return unless @header_written && @tuples_written > 0
+      return true if @finalized
+      return false unless @header_written && @tuples_written > 0
       @output.write(";\n\n")
       @tuples_written = 0
+      @finalized = true
     end
 
     def prepare(attributes)

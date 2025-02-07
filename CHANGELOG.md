@@ -7,6 +7,70 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+ - Options to exclude all `has_many` and `has_one` or optional `belongs_to` associations by default. [@Envek]
+
+   ```ruby
+   root.exclude_has_relations
+   root.exclude_optional_belongs_to
+   ```
+
+   Excluded associations can be re-included by `include` with matching pattern.
+
+ - Exclusion and inclusion patterns can be specified as hashes and/or arrays. [@Envek]
+
+   ```ruby
+   config.root('Forum', featured: true) do |forum|
+     forum.include(parent: {questions: %i[answers votes]})
+   end
+   ```
+
+   Which is equivalent to:
+
+   ```ruby
+   config.root('Forum', featured: true) do |forum|
+     forum.include(/\Aforum(\.parent(\.questions(\.answers))?)?)?\z/)
+     forum.include(/\Aforum(\.parent(\.questions(\.votes))?)?)?\z/)
+   end
+   ```
+
+ - Association limits also can be specified as hashes and/or arrays. [@Envek]
+
+    ```ruby
+   config.root('Forum', featured: true) do |forum|
+     forum.limit_associations_size(15, questions: %i[answers votes])
+   end
+   ```
+
+   Which is equivalent to:
+
+   ```ruby
+   config.root('Forum', featured: true) do |forum|
+     forum.limit_associations_size(15, 'forum.questions.answers')
+     forum.limit_associations_size(15, 'forum.questions.votes')
+   end
+   ```
+
+
+ - Print reason of association exclusion or inclusion in verbose mode. [@Envek]
+
+ - Allow to apply custom scoping to included associations. [@Envek]
+
+   ```ruby
+   config.root('Forum', featured: true) do |forum|
+     forum.include('questions.answers') do
+       order(created_at: :desc)
+     end
+   end
+   ```
+
+### Fixed
+
+ - Bug with null foreign key to back to auxiliary `has_one` association with not matching names. E.g. user has many profiles and has one default profile, profile belongs to user.
+ - Ignored columns handling.
+ - Dump relations for records that were dumped earlier with relations excluded.
+
 ## [0.6.0] - 2024-06-18
 
 ### Added

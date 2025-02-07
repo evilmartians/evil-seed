@@ -11,6 +11,7 @@ module EvilSeed
         root.exclude('forum.users')
         root.exclude(/parent\.users/)
         root.exclude(/role\..+/)
+        root.exclude(/\.reactions\b/)
       end
       configuration.customize('User') do |attributes|
         attributes['password'] = '12345678'
@@ -64,7 +65,7 @@ module EvilSeed
     def test_it_applies_unscoping_and_inclusions
       configuration = EvilSeed::Configuration.new
       configuration.root('Forum', name: 'Descendant forum') do |root|
-        root.include(/forum(\.parent(\.questions(\.answers)?)?)?\z/)
+        root.include(parent: {questions: :answers})
         root.exclude(/.\..+/)
       end
       configuration.unscoped = true
@@ -76,6 +77,48 @@ module EvilSeed
       assert io.closed?
       assert_match(/'Descendant forum'/, result)
       assert_match(/'Oops, I was wrong'/, result)
+    end
+
+    def test_it_applies_custom_scopes
+      configuration = EvilSeed::Configuration.new
+      configuration.root('Forum', name: 'Descendant forum') do |root|
+        root.include(parent: {questions: :answers })
+        root.include(/\Aforum\.parent\.questions\.answers\.reactions\z/) do
+          order(created_at: :desc).limit(2)
+        end
+        root.exclude(/.\..+/)
+      end
+
+      io = StringIO.new
+      EvilSeed::Dumper.new(configuration).call(io)
+      result = io.string
+      File.write(File.join('tmp', "#{__method__}.sql"), result)
+      assert io.closed?
+      assert_match("':+1:'", result)
+      assert_equal(2, result.scan("':+1:'").size)
+    end
+
+    def test_it_dumps_included_relations_for_already_loaded_records
+      configuration = EvilSeed::Configuration.new
+      configuration.root('Forum', name: 'One') do |forum|
+        forum.exclude_has_relations
+        forum.include(questions: :author) # but not answers
+      end
+      configuration.root('User', forum: Forum.where(name: 'One')) do |user|
+        user.exclude_has_relations
+        user.include(:profiles)
+      end
+
+      io = StringIO.new
+      EvilSeed::Dumper.new(configuration).call(io)
+      result = io.string
+      File.write(File.join('tmp', "#{__method__}.sql"), result)
+      assert io.closed?
+
+      # Expect all profiles of forum One users to be loaded
+      assert_match(/'Profile for user 0'/, result)
+      refute_match(/'Profile for user 1'/, result)
+      assert_match(/'Profile for user 2'/, result)
     end
   end
 end

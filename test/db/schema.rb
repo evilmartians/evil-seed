@@ -22,6 +22,7 @@ def create_schema!
     create_table :profiles do |t|
       t.references :user, foreign_key: { on_delete: :cascade }
       t.string     :name
+      t.boolean    :default, default: false
       t.string     :title
     end
 
@@ -52,6 +53,13 @@ def create_schema!
     create_table :votes do |t|
       t.references :votable, polymorphic: true
       t.references :user, foreign_key: { on_delete: :nullify }
+    end
+
+    create_table :reactions do |t|
+      t.references :reactable, polymorphic: true
+      t.references :user, foreign_key: { on_delete: :nullify }
+      t.string :reaction
+      t.timestamps null: false
     end
 
     create_table :roles do |t|
