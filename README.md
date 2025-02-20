@@ -161,6 +161,69 @@ This gem has been tested against:
  - MySQL: any version that works with ActiveRecord should work
  - SQLite: 3.7.11 or newer is required (with support for inserting multiple rows at a time)
 
+## Restoring dump
+
+Resulting dump is a plain SQL file: you can restore it using any SQL client like `psql`, `mysql`, `sqlite3`, etc.
+
+If you need to do it from Ruby, you can use the following code:
+
+```ruby
+ActiveRecord::Base.connection.execute(File.read('path/to/new_dump.sql'))
+```
+
+### Restoration tips and tricks
+
+ 1. Reset primary key sequences after restoration, so default seeds can be generated afterwards and your app will work as expected:
+
+    ```ruby
+    ActiveRecord::Base.connection.tables.each do |table|
+      ActiveRecord::Base.connection.reset_pk_sequence!(table)
+    end
+    ```
+
+ 2. To restore dumps with circular dependencies between records in PostgreSQL you can make all foreign keys deferrable beforehand (by default they are not) and restore the dump in a transaction with all foreign keys deferred.
+
+    <details>
+    <summary>Code to defer, restore, undefer:</summary>
+
+    ```ruby
+    connection = ActiveRecord::Base.connection
+
+    # Convert all foreign keys to deferrable to handle circular dependencies
+    transaction do
+      connection.tables.each do |table|
+        connection.foreign_keys(table).each do |fk|
+          connection.execute <<~SQL.squish
+            ALTER TABLE #{connection.quote_table_name(table)}
+            ALTER CONSTRAINT #{connection.quote_table_name(fk.options[:name])}
+            NOT DEFERRABLE
+          SQL
+        end
+      end
+    end
+
+    # Load the dump
+    connection.transaction do
+      connection.execute("SET CONSTRAINTS ALL DEFERRED")
+      connection.execute(File.read(filepath))
+    end
+
+
+    # Convert all foreign keys back to not deferrable
+    # See https://begriffs.com/posts/2017-08-27-deferrable-sql-constraints.html#reasons-not-to-defer
+    connection.transaction do
+      connection.tables.each do |table|
+        connection.foreign_keys(table).each do |fk|
+          connection.execute <<~SQL.squish
+            ALTER TABLE #{connection.quote_table_name(table)}
+            ALTER CONSTRAINT #{connection.quote_table_name(fk.options[:name])}
+            NOT DEFERRABLE
+          SQL
+        end
+      end
+    end
+    ```
+    </details>
 
 ## FIXME (help wanted)
 
